@@ -2,6 +2,12 @@
 session_start();
 require_once __DIR__ . '/config/database.php';
 
+// Composer autoloader (untuk Dompdf dan library lain)
+$vendorAutoload = __DIR__ . '/vendor/autoload.php';
+if (file_exists($vendorAutoload)) {
+    require_once $vendorAutoload;
+}
+
 // Auto-generate a real bcrypt hash for 'admin123'
 // The default user uses 'password' as hash placeholder; actual password is set below
 

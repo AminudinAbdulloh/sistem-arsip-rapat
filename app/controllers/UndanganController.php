@@ -2,6 +2,8 @@
 require_once BASE_PATH . '/app/controllers/Controller.php';
 require_once BASE_PATH . '/app/models/Undangan.php';
 
+use Dompdf\Dompdf;
+
 class UndanganController extends Controller {
     private $model;
 
@@ -103,7 +105,15 @@ class UndanganController extends Controller {
         $u = $this->model->getById($id);
         if (!$u) { $this->redirect('undangan'); }
 
-        header('Content-Type: text/html; charset=utf-8');
+        // Pastikan Dompdf tersedia
+        if (!class_exists('\Dompdf\Dompdf')) {
+            header('Content-Type: text/html; charset=utf-8');
+            echo 'Library Dompdf belum terinstal. Silakan jalankan <code>composer require dompdf/dompdf</code> di direktori proyek.';
+            exit;
+        }
+
+        // Ambil HTML template undangan
+        ob_start();
         ?>
 <!DOCTYPE html>
 <html>
@@ -123,7 +133,6 @@ class UndanganController extends Controller {
   .ttd { margin-top: 50px; display: flex; justify-content: flex-end; }
   .ttd-box { text-align: center; min-width: 200px; }
   .ttd-box .ttd-space { height: 70px; }
-  @media print { body { margin: 20px; } }
 </style>
 </head>
 <body>
@@ -147,10 +156,19 @@ class UndanganController extends Controller {
     <p><strong><?= htmlspecialchars($u['pembuat']) ?></strong></p>
   </div>
 </div>
-<script>window.onload = function() { window.print(); }</script>
 </body>
 </html>
 <?php
+        $html = ob_get_clean();
+
+        // Render HTML menjadi PDF dengan Dompdf
+        $dompdf = new Dompdf();
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        // Tampilkan PDF di browser (inline)
+        $dompdf->stream('undangan-rapat.pdf', ['Attachment' => false]);
         exit;
     }
 }
