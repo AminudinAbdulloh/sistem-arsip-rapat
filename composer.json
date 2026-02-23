@@ -1,0 +1,14 @@
+{
+    "name": "itd-adisutjipto/arsip-rapat",
+    "description": "Sistem Informasi Pengelolaan Arsip Rapat ITD Adisutjipto",
+    "type": "project",
+    "require": {
+        "php": ">=8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "ArsipRapat\\": "app",
+            "ArsipRapat\\Config\\": "config"
+        }
+    }
+}
