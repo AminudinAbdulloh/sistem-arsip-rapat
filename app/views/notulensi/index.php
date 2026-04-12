@@ -1,3 +1,12 @@
+<?php
+// Formatter untuk format lengkap (Hari, Tanggal Bulan Tahun)
+$formatterLengkap = new IntlDateFormatter(
+  'id_ID', 
+  IntlDateFormatter::FULL, 
+  IntlDateFormatter::NONE
+);
+?>
+
 <div class="page-header">
   <div class="breadcrumb"><i class="fas fa-home"></i> <a href="<?= BASE_URL ?>/index.php?url=dashboard">Dashboard</a> <i class="fas fa-chevron-right" style="font-size:10px"></i> Notulensi Rapat</div>
   <h1><i class="fas fa-file-alt" style="color:var(--primary-light)"></i> Notulensi Rapat</h1>
@@ -24,11 +33,9 @@
       <thead>
         <tr>
           <th width="50">No</th>
-          <th>Tgl Rapat</th>
+          <th>Hari/Tanggal Rapat</th>
           <th>Tema Rapat</th>
-          <th>Acara Undangan</th>
           <th>Dokumentasi</th>
-          <th>Dibuat Oleh</th>
           <th width="180">Aksi</th>
         </tr>
       </thead>
@@ -36,9 +43,14 @@
         <?php foreach ($notulensi as $i => $n): ?>
         <tr>
           <td><?= $i + 1 ?></td>
-          <td><?= date('d/m/Y', strtotime($n['tgl_rapat'])) ?></td>
+          <td>
+              <?php 
+                  $dateWaktu = new DateTime($n['tgl_rapat']);
+                  $formatterLengkap->setPattern("EEEE / d MMMM y"); 
+                  echo $formatterLengkap->format($dateWaktu);
+              ?>
+          </td>
           <td><strong><?= htmlspecialchars(strlen($n['tema_rapat']) > 40 ? substr($n['tema_rapat'],0,40).'...' : $n['tema_rapat']) ?></strong></td>
-          <td><?= htmlspecialchars(strlen($n['nama_undangan']) > 50 ? substr($n['nama_undangan'],0,50).'...' : $n['nama_undangan']) ?></td>
           <td>
             <?php if ($n['dokumentasi']): ?>
               <a href="<?= BASE_URL ?>/public/uploads/dokumentasi/<?= htmlspecialchars($n['dokumentasi']) ?>" 
@@ -49,7 +61,6 @@
               <span style="color:var(--muted);font-size:12px">—</span>
             <?php endif; ?>
           </td>
-          <td><?= htmlspecialchars($n['pembuat']) ?></td>
           <td>
             <div style="display:flex;gap:5px;flex-wrap:wrap">
               <a href="<?= BASE_URL ?>/index.php?url=notulensi/detail/<?= $n['id'] ?>" 

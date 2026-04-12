@@ -1,3 +1,12 @@
+<?php
+// Formatter untuk format lengkap (Hari, Tanggal Bulan Tahun)
+$formatterLengkap = new IntlDateFormatter(
+  'id_ID', 
+  IntlDateFormatter::FULL, 
+  IntlDateFormatter::NONE
+);
+?>
+
 <div class="page-header">
   <div class="breadcrumb">
     <i class="fas fa-home"></i>
@@ -25,27 +34,30 @@
   <div class="card-body">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" class="detail-grid">
       <div>
-        <h3 style="font-size:14px;color:var(--muted);margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px">Informasi Notulensi</h3>
-        <table style="width:100%;font-size:14px">
+        <h3 style="font-size:14px;color:var(--muted);margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px">Informasi Rapat</h3>
+        <table style="width:100%;font-size:14px;">
           <tr>
-            <td style="padding:8px 0;color:var(--muted);width:140px">Tanggal Rapat</td>
-            <td style="padding:8px 0"><strong><?= date('d F Y', strtotime($notulensi['tgl_rapat'])) ?></strong></td>
+            <td style="padding:8px 0;color:var(--muted);width:140px"><i class="fas fa-calendar" style="color:var(--primary-light)"></i> <strong>Hari/Tanggal Rapat</strong></td>
+            <td style="padding:8px 0"><strong>
+              <?php 
+                    $dateWaktu = new DateTime($notulensi['tgl_rapat']);
+                    $formatterLengkap->setPattern("EEEE / d MMMM y"); 
+                    echo $formatterLengkap->format($dateWaktu);
+                ?>
+            </strong></td>
           </tr>
           <tr>
-            <td style="padding:8px 0;color:var(--muted)">Tema Rapat</td>
+            <td style="padding:8px 0;color:var(--muted)"><i class="fas fa-clipboard" style="color:var(--warning)"></i> <strong>Tema Rapat</strong></td>
             <td style="padding:8px 0"><strong><?= htmlspecialchars($notulensi['tema_rapat']) ?></strong></td>
           </tr>
           <tr>
-            <td style="padding:8px 0;color:var(--muted)">Dibuat Oleh</td>
-            <td style="padding:8px 0"><?= htmlspecialchars($notulensi['pembuat']) ?></td>
+            <td style="padding:8px 0;color:var(--muted)"><i class="fas fa-map-marker-alt" style="color:var(--danger)"></i> <strong>Tempat Rapat</strong></td>
+            <td style="padding:8px 0"><strong><?= htmlspecialchars($notulensi['tempat']) ?></strong></td>
           </tr>
         </table>
 
-        <h3 style="font-size:14px;color:var(--muted);margin:20px 0 12px;text-transform:uppercase;letter-spacing:.5px">Lihat Undangan</h3>
+        <h3 style="font-size:14px;color:var(--muted);margin:20px 0 12px;text-transform:uppercase;letter-spacing:.5px">Dokumen Pendukung</h3>
         <div style="background:#f8fafc;border-radius:8px;padding:14px;border:1px solid var(--border)">
-          <p style="font-size:13px;margin-bottom:6px"><i class="fas fa-calendar" style="color:var(--primary-light)"></i> <strong><?= htmlspecialchars($notulensi['hari']) ?></strong>, <?= date('d/m/Y H:i', strtotime($notulensi['waktu_undangan'])) ?> WIB</p>
-          <p style="font-size:13px;margin-bottom:6px"><i class="fas fa-map-marker-alt" style="color:var(--danger)"></i> <?= htmlspecialchars($notulensi['tempat']) ?></p>
-          <p style="font-size:13px"><i class="fas fa-clipboard" style="color:var(--warning)"></i> <?= htmlspecialchars($notulensi['nama_undangan']) ?></p>
         </div>
       </div>
       <div>

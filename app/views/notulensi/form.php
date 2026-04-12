@@ -1,4 +1,4 @@
-<?php $isEdit = $notulensi !== null; ?>
+<?php $isEdit = isset($notulensi) && $notulensi !== null; ?>
 <div class="page-header">
   <div class="breadcrumb">
     <i class="fas fa-home"></i>
@@ -27,28 +27,33 @@
     <form method="POST" enctype="multipart/form-data">
       <div class="form-group">
         <label class="form-label">Undangan Rapat <span class="req">*</span></label>
-        <select name="undangan_id" class="form-control" required>
+        <select name="undangan_id" class="form-control" required id="undanganSelect">
           <option value="">-- Pilih Undangan Rapat --</option>
-          <?php foreach ($undanganList as $u): ?>
-            <option value="<?= $u['id'] ?>" <?= ($notulensi['undangan_id'] ?? 0) == $u['id'] ? 'selected' : '' ?>>
-              <?= htmlspecialchars($u['hari'] . ', ' . date('d/m/Y H:i', strtotime($u['waktu'])) . ' - ' . substr($u['acara'], 0, 60)) ?>
+          <?php foreach ($undanganList as $u): 
+            $sudahPunyaNotulensi = $isEdit 
+              ? ($u['id'] != $notulensi['undangan_id'] && isset($u['has_notulensi']) && $u['has_notulensi'])
+              : false;
+          ?>
+            <option value="<?= $u['id'] ?>" 
+              <?= ($notulensi['undangan_id'] ?? 0) == $u['id'] ? 'selected' : '' ?>
+              <?= $sudahPunyaNotulensi ? 'disabled' : '' ?>
+              data-waktu="<?= date('d/m/Y H:i', strtotime($u['waktu'])) ?>"
+              data-tempat="<?= htmlspecialchars($u['tempat']) ?>"
+              data-acara="<?= htmlspecialchars(substr($u['acara'], 0, 80)) ?>">
+              <?= htmlspecialchars(date('d/m/Y H:i', strtotime($u['waktu'])) . ' - ' . substr($u['acara'], 0, 60)) ?>
+              <?= $sudahPunyaNotulensi ? ' (sudah ada notulensi)' : '' ?>
             </option>
           <?php endforeach; ?>
         </select>
-        <p class="form-hint">Pilih undangan rapat yang sudah dibuat sebelumnya.</p>
+        <p class="form-hint">Pilih undangan rapat. Tanggal dan tema akan otomatis diambil dari undangan yang dipilih.</p>
       </div>
 
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">Tanggal Rapat <span class="req">*</span></label>
-          <input type="date" name="tgl_rapat" class="form-control" required
-            value="<?= htmlspecialchars($notulensi['tgl_rapat'] ?? '') ?>">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Tema Rapat <span class="req">*</span></label>
-          <input type="text" name="tema_rapat" class="form-control" placeholder="Tema utama rapat" required
-            value="<?= htmlspecialchars($notulensi['tema_rapat'] ?? '') ?>">
-        </div>
+      <!-- Info undangan yang dipilih (read-only) -->
+      <div id="undanganInfo" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px;margin-bottom:20px">
+        <p style="font-size:13px;color:#1e40af;margin-bottom:4px;font-weight:600"><i class="fas fa-info-circle"></i> Info Undangan yang Dipilih</p>
+        <p style="font-size:13px;margin-bottom:4px"><i class="fas fa-calendar" style="color:var(--primary-light);width:16px"></i> <span id="infoWaktu"></span></p>
+        <p style="font-size:13px;margin-bottom:4px"><i class="fas fa-map-marker-alt" style="color:var(--danger);width:16px"></i> <span id="infoTempat"></span></p>
+        <p style="font-size:13px;margin-bottom:0"><i class="fas fa-clipboard" style="color:var(--warning);width:16px"></i> <span id="infoAcara"></span></p>
       </div>
 
       <div class="form-group">
@@ -90,6 +95,7 @@
 </div>
 
 <script>
+// Preview foto
 document.getElementById('fotoInput').addEventListener('change', function() {
   if (this.files && this.files[0]) {
     const reader = new FileReader();
@@ -100,4 +106,22 @@ document.getElementById('fotoInput').addEventListener('change', function() {
     reader.readAsDataURL(this.files[0]);
   }
 });
+
+// Tampilkan info undangan saat pilih
+var select = document.getElementById('undanganSelect');
+function updateUndanganInfo() {
+  var opt = select.options[select.selectedIndex];
+  var info = document.getElementById('undanganInfo');
+  if (opt && opt.value) {
+    document.getElementById('infoWaktu').textContent = opt.getAttribute('data-waktu');
+    document.getElementById('infoTempat').textContent = opt.getAttribute('data-tempat');
+    document.getElementById('infoAcara').textContent = opt.getAttribute('data-acara');
+    info.style.display = 'block';
+  } else {
+    info.style.display = 'none';
+  }
+}
+select.addEventListener('change', updateUndanganInfo);
+// Inisialisasi jika sudah ada pilihan (mode edit)
+updateUndanganInfo();
 </script>

@@ -1,3 +1,19 @@
+<?php
+// Formatter untuk format lengkap (Hari, Tanggal Bulan Tahun)
+$formatterLengkap = new IntlDateFormatter(
+  'id_ID', 
+  IntlDateFormatter::FULL, 
+  IntlDateFormatter::NONE
+);
+
+// Formatter untuk tanggal saja (Tanpa Hari)
+$formatterTanggal = new IntlDateFormatter(
+  'id_ID', 
+  IntlDateFormatter::LONG, 
+  IntlDateFormatter::NONE
+);
+?>
+
 <div class="page-header">
   <div class="breadcrumb"><i class="fas fa-home"></i> <a href="<?= BASE_URL ?>/index.php?url=dashboard">Dashboard</a> <i class="fas fa-chevron-right" style="font-size:10px"></i> Undangan Rapat</div>
   <h1><i class="fas fa-envelope-open-text" style="color:var(--primary-light)"></i> Undangan Rapat</h1>
@@ -24,28 +40,36 @@
       <thead>
         <tr>
           <th width="50">No</th>
-          <th>Hari</th>
-          <th>Waktu</th>
+          <th>Hari/Tanggal Rapat</th>
+          <th>Waktu Rapat</th>
           <th>Tempat</th>
-          <th>Acara</th>
-          <th>Dibuat Oleh</th>
-          <th width="180">Aksi</th>
+          <th>Agenda</th>
+          <th>Tanggal Surat</th>
+          <th width="160">Aksi</th>
         </tr>
       </thead>
       <tbody>
         <?php foreach ($undangan as $i => $u): ?>
         <tr>
           <td><?= $i + 1 ?></td>
-          <td><span class="badge badge-blue"><?= htmlspecialchars($u['hari']) ?></span></td>
-          <td><?= date('d/m/Y H:i', strtotime($u['waktu'])) ?></td>
+          <td>
+              <?php 
+                  $dateWaktu = new DateTime($u['waktu']);
+                  $formatterLengkap->setPattern("EEEE / d MMMM y"); 
+                  echo $formatterLengkap->format($dateWaktu);
+              ?>
+          </td>
+          <td><?= date('H:i', strtotime($u['waktu'])) ?></td>
           <td><?= htmlspecialchars($u['tempat']) ?></td>
           <td><?= htmlspecialchars(strlen($u['acara']) > 60 ? substr($u['acara'],0,60).'...' : $u['acara']) ?></td>
-          <td><?= htmlspecialchars($u['pembuat']) ?></td>
+          <td>
+              <?= $formatterTanggal->format(new DateTime($u['tgl_surat'])) ?>
+          </td>
           <td>
             <div style="display:flex;gap:5px;flex-wrap:wrap">
-              <a href="<?= BASE_URL ?>/index.php?url=undangan/pdf/<?= $u['id'] ?>" target="_blank" 
-                 class="btn btn-sm btn-success" title="Download PDF">
-                <i class="fas fa-file-pdf"></i>
+              <a href="<?= BASE_URL ?>/index.php?url=undangan/doc/<?= $u['id'] ?>"
+                 class="btn btn-sm btn-success" title="Unduh Surat (.docx)">
+                <i class="fas fa-file-word"></i>
               </a>
               <a href="<?= BASE_URL ?>/index.php?url=undangan/edit/<?= $u['id'] ?>" 
                  class="btn btn-sm btn-warning" title="Edit">

@@ -27,29 +27,31 @@
     <form method="POST">
       <div class="form-grid">
         <div class="form-group">
-          <label class="form-label">Hari <span class="req">*</span></label>
-          <select name="hari" class="form-control" required>
-            <option value="">-- Pilih Hari --</option>
-            <?php foreach ($hariList as $h): ?>
-              <option value="<?= $h ?>" <?= ($undangan['hari'] ?? '') === $h ? 'selected' : '' ?>><?= $h ?></option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-        <div class="form-group">
           <label class="form-label">Waktu Rapat <span class="req">*</span></label>
           <input type="datetime-local" name="waktu" class="form-control" required
             value="<?= $isEdit ? date('Y-m-d\TH:i', strtotime($undangan['waktu'])) : '' ?>">
+          <p class="form-hint">Hari dan tanggal akan otomatis diambil dari waktu ini.</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tanggal Surat <span class="req">*</span></label>
+          <input type="date" name="tgl_surat" class="form-control" required
+            value="<?= htmlspecialchars($undangan['tgl_surat'] ?? date('Y-m-d')) ?>">
+          <p class="form-hint">Tanggal pembuatan surat undangan.</p>
         </div>
       </div>
+
       <div class="form-group">
         <label class="form-label">Tempat <span class="req">*</span></label>
-        <input type="text" name="tempat" class="form-control" placeholder="Contoh: Ruang Rapat Prodi Lt. 2" required
+        <input type="text" name="tempat" class="form-control" placeholder="Contoh: Ruang Seminar Opsjar (Galaxy)" required
           value="<?= htmlspecialchars($undangan['tempat'] ?? '') ?>">
       </div>
+
       <div class="form-group">
-        <label class="form-label">Acara / Agenda <span class="req">*</span></label>
-        <textarea name="acara" class="form-control" placeholder="Tuliskan agenda rapat..." required rows="5"><?= htmlspecialchars($undangan['acara'] ?? '') ?></textarea>
+        <label class="form-label">Acara / Perihal <span class="req">*</span></label>
+        <textarea name="acara" class="form-control" placeholder="Tuliskan acara/perihal rapat..." required rows="5"><?= htmlspecialchars($undangan['acara'] ?? '') ?></textarea>
+        <p class="form-hint">Acara ini juga digunakan sebagai perihal surat undangan dan tema notulensi.</p>
       </div>
+
       <div style="display:flex;gap:10px">
         <button type="submit" class="btn btn-primary">
           <i class="fas fa-save"></i> <?= $isEdit ? 'Perbarui' : 'Simpan' ?>

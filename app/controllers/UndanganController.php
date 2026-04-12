@@ -2,8 +2,6 @@
 require_once BASE_PATH . '/app/controllers/Controller.php';
 require_once BASE_PATH . '/app/models/Undangan.php';
 
-use Dompdf\Dompdf;
-
 class UndanganController extends Controller {
     private $model;
 
@@ -24,17 +22,15 @@ class UndanganController extends Controller {
     public function create($param = null) {
         $this->requireLogin();
         $error = '';
-        $hariList = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
-                'hari' => $_POST['hari'] ?? '',
-                'waktu' => $_POST['waktu'] ?? '',
-                'tempat' => trim($_POST['tempat'] ?? ''),
-                'acara' => trim($_POST['acara'] ?? ''),
-                'dibuat_oleh' => $_SESSION['user_id'],
+                'waktu'       => $_POST['waktu'] ?? '',
+                'tempat'      => trim($_POST['tempat'] ?? ''),
+                'acara'       => trim($_POST['acara'] ?? ''),
+                'tgl_surat'   => $_POST['tgl_surat'] ?? date('Y-m-d'),
             ];
-            if (empty($data['hari']) || empty($data['waktu']) || empty($data['tempat']) || empty($data['acara'])) {
+            if (empty($data['waktu']) || empty($data['tempat']) || empty($data['acara'])) {
                 $error = 'Semua field harus diisi.';
             } else {
                 if ($this->model->create($data)) {
@@ -50,7 +46,6 @@ class UndanganController extends Controller {
             'title' => 'Tambah Undangan Rapat',
             'content' => 'undangan/form',
             'error' => $error,
-            'hariList' => $hariList,
             'undangan' => null,
         ]);
     }
@@ -61,16 +56,15 @@ class UndanganController extends Controller {
         if (!$undangan) { $this->redirect('undangan'); }
 
         $error = '';
-        $hariList = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
-                'hari' => $_POST['hari'] ?? '',
-                'waktu' => $_POST['waktu'] ?? '',
-                'tempat' => trim($_POST['tempat'] ?? ''),
-                'acara' => trim($_POST['acara'] ?? ''),
+                'waktu'     => $_POST['waktu'] ?? '',
+                'tempat'    => trim($_POST['tempat'] ?? ''),
+                'acara'     => trim($_POST['acara'] ?? ''),
+                'tgl_surat' => $_POST['tgl_surat'] ?? date('Y-m-d'),
             ];
-            if (empty($data['hari']) || empty($data['waktu']) || empty($data['tempat']) || empty($data['acara'])) {
+            if (empty($data['waktu']) || empty($data['tempat']) || empty($data['acara'])) {
                 $error = 'Semua field harus diisi.';
             } else {
                 if ($this->model->update($id, $data)) {
@@ -86,7 +80,6 @@ class UndanganController extends Controller {
             'title' => 'Edit Undangan Rapat',
             'content' => 'undangan/form',
             'error' => $error,
-            'hariList' => $hariList,
             'undangan' => $undangan,
         ]);
     }
@@ -100,75 +93,84 @@ class UndanganController extends Controller {
         $this->redirect('undangan');
     }
 
-    public function pdf($id) {
+    public function doc($id) {
         $this->requireLogin();
         $u = $this->model->getById($id);
         if (!$u) { $this->redirect('undangan'); }
 
-        // Pastikan Dompdf tersedia
-        if (!class_exists('\Dompdf\Dompdf')) {
+        $templatePath = BASE_PATH . '/public/templates/undangan_template.docx';
+        if (!file_exists($templatePath)) {
             header('Content-Type: text/html; charset=utf-8');
-            echo 'Library Dompdf belum terinstal. Silakan jalankan <code>composer require dompdf/dompdf</code> di direktori proyek.';
+            echo 'Template undangan tidak ditemukan di: ' . $templatePath;
             exit;
         }
 
-        // Ambil HTML template undangan
-        ob_start();
-        ?>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Undangan Rapat</title>
-<style>
-  body { font-family: Arial, sans-serif; margin: 40px; color: #222; }
-  .kop { text-align: center; border-bottom: 3px double #1a3a5c; padding-bottom: 15px; margin-bottom: 20px; }
-  .kop h2 { margin: 0; color: #1a3a5c; font-size: 16px; }
-  .kop h3 { margin: 4px 0 0; color: #1a3a5c; font-size: 13px; font-weight: normal; }
-  .judul { text-align: center; margin: 20px 0; text-decoration: underline; font-weight: bold; font-size: 14px; }
-  table.detail { margin: 20px 0; width: 100%; }
-  table.detail td { padding: 6px 4px; vertical-align: top; }
-  table.detail td:first-child { width: 130px; font-weight: bold; }
-  table.detail td:nth-child(2) { width: 10px; }
-  .ttd { margin-top: 50px; display: flex; justify-content: flex-end; }
-  .ttd-box { text-align: center; min-width: 200px; }
-  .ttd-box .ttd-space { height: 70px; }
-</style>
-</head>
-<body>
-<div class="kop">
-  <h2>INSTITUT TEKNOLOGI DIRGANTARA ADISUTJIPTO</h2>
-  <h3>Program Studi - Sistem Informasi Pengelolaan Arsip Rapat</h3>
-</div>
-<div class="judul">UNDANGAN RAPAT</div>
-<table class="detail">
-  <tr><td>Hari</td><td>:</td><td><?= htmlspecialchars($u['hari']) ?></td></tr>
-  <tr><td>Waktu</td><td>:</td><td><?= date('d/m/Y H:i', strtotime($u['waktu'])) ?> WIB</td></tr>
-  <tr><td>Tempat</td><td>:</td><td><?= htmlspecialchars($u['tempat']) ?></td></tr>
-  <tr><td>Acara</td><td>:</td><td><?= nl2br(htmlspecialchars($u['acara'])) ?></td></tr>
-</table>
-<p>Demikian undangan ini kami sampaikan. Atas perhatian dan kehadiran Bapak/Ibu, kami mengucapkan terima kasih.</p>
-<div class="ttd">
-  <div class="ttd-box">
-    <p>Yogyakarta, <?= date('d/m/Y') ?></p>
-    <p>Hormat Kami,</p>
-    <div class="ttd-space"></div>
-    <p><strong><?= htmlspecialchars($u['pembuat']) ?></strong></p>
-  </div>
-</div>
-</body>
-</html>
-<?php
-        $html = ob_get_clean();
+        $waktu             = strtotime($u['waktu']);
+        $hariIndo          = $this->getHariIndonesia(date('N', $waktu));
+        $tglFormatted      = $hariIndo . ' / ' . $this->formatTanggalIndo(date('Y-m-d', $waktu));
+        $jamFormatted      = date('H.i', $waktu) . ' WIB - Selesai';
+        $tglSurat          = !empty($u['tgl_surat']) ? $u['tgl_surat'] : date('Y-m-d');
+        $tglSuratFormatted = $this->formatTanggalIndo($tglSurat);
+        $acara            = $u['acara'];
 
-        // Render HTML menjadi PDF dengan Dompdf
-        $dompdf = new Dompdf();
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
+        // acara digunakan sebagai perihal surat
+        $this->generateDocxFromTemplate($templatePath, [
+            '{{PERIHAL}}'   => $u['acara'],
+            '{{HARI_TGL}}'  => $tglFormatted,
+            '{{WAKTU}}'     => $jamFormatted,
+            '{{TEMPAT}}'    => $u['tempat'],
+            '{{TGL_SURAT}}' => $tglSuratFormatted,
+        ], 'Undangan ' . $acara . ' ' . $this->formatTanggalIndo(date('Y-m-d', $waktu)) . '.docx');
+    }
 
-        // Tampilkan PDF di browser (inline)
-        $dompdf->stream('undangan-rapat.pdf', ['Attachment' => false]);
+    private function generateDocxFromTemplate($templatePath, $replacements, $filename) {
+        $tmpFile = sys_get_temp_dir() . '/' . uniqid('undangan_') . '.docx';
+        copy($templatePath, $tmpFile);
+
+        $zip = new ZipArchive();
+        if ($zip->open($tmpFile) !== true) {
+            header('Content-Type: text/html; charset=utf-8');
+            echo 'Gagal membuka template DOCX.';
+            exit;
+        }
+
+        $xmlContent = $zip->getFromName('word/document.xml');
+        if ($xmlContent === false) {
+            $zip->close();
+            header('Content-Type: text/html; charset=utf-8');
+            echo 'Gagal membaca isi template.';
+            exit;
+        }
+
+        foreach ($replacements as $placeholder => $value) {
+            $xmlContent = str_replace(
+                htmlspecialchars($placeholder),
+                htmlspecialchars($value),
+                $xmlContent
+            );
+            $xmlContent = str_replace($placeholder, htmlspecialchars($value), $xmlContent);
+        }
+
+        $zip->addFromString('word/document.xml', $xmlContent);
+        $zip->close();
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . filesize($tmpFile));
+        header('Cache-Control: no-cache, must-revalidate');
+        readfile($tmpFile);
+        unlink($tmpFile);
         exit;
+    }
+
+    private function getHariIndonesia($dayNum) {
+        $hari = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+        return $hari[$dayNum] ?? '';
+    }
+
+    private function formatTanggalIndo($dateStr) {
+        $bulan = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        $ts = strtotime($dateStr);
+        return date('j', $ts) . ' ' . $bulan[(int)date('n', $ts)] . ' ' . date('Y', $ts);
     }
 }
