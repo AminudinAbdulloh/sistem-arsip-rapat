@@ -36,7 +36,6 @@ class DashboardController extends Controller {
 
     public function downloadBulanan($param = null) {
         $this->requireLogin();
-
         $year = $_GET['year'] ?? date('Y');
         $month = $_GET['month'] ?? date('m');
 
@@ -64,6 +63,7 @@ class DashboardController extends Controller {
     }
 
     private function generatePdfLaporan($judul, $undangan, $notulensi, $filename) {
+        // Simple HTML to PDF using built-in output
         header('Content-Type: text/html; charset=utf-8');
         ?>
 <!DOCTYPE html>
@@ -96,10 +96,11 @@ class DashboardController extends Controller {
   <p><em>Tidak ada data undangan rapat.</em></p>
 <?php else: ?>
 <table>
-  <tr><th>No</th><th>Waktu</th><th>Tempat</th><th>Acara</th><th>Dibuat Oleh</th></tr>
+  <tr><th>No</th><th>Hari</th><th>Waktu</th><th>Tempat</th><th>Acara</th><th>Dibuat Oleh</th></tr>
   <?php foreach ($undangan as $i => $u): ?>
   <tr>
     <td><?= $i+1 ?></td>
+    <td><?= htmlspecialchars($u['hari']) ?></td>
     <td><?= date('d/m/Y H:i', strtotime($u['waktu'])) ?></td>
     <td><?= htmlspecialchars($u['tempat']) ?></td>
     <td><?= htmlspecialchars($u['acara']) ?></td>

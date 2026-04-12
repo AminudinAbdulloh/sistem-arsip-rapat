@@ -48,11 +48,10 @@ $months = array_column($monthlyStats, 'total', 'bulan');
       <h2><i class="fas fa-calendar-alt" style="color:var(--primary-light)"></i> Laporan Bulanan</h2>
     </div>
     <div class="card-body">
-      <form method="GET" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px">
-        <input type="hidden" name="url" value="dashboard">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px">
         <div>
           <label class="form-label">Tahun</label>
-          <select name="year" class="form-control" style="width:120px">
+          <select id="bulananYear" class="form-control" style="width:120px">
             <?php if (empty($availableYears)): ?>
               <option><?= date('Y') ?></option>
             <?php else: ?>
@@ -64,18 +63,17 @@ $months = array_column($monthlyStats, 'total', 'bulan');
         </div>
         <div>
           <label class="form-label">Bulan</label>
-          <select name="month" class="form-control" style="width:140px">
+          <select id="bulananMonth" class="form-control" style="width:140px">
             <?php for ($m=1; $m<=12; $m++): ?>
               <option value="<?= $m ?>" <?= $m == $selectedMonth ? 'selected' : '' ?>><?= $namaBulan[$m] ?></option>
             <?php endfor; ?>
           </select>
         </div>
-        <a href="<?= BASE_URL ?>/index.php?url=dashboard/downloadBulanan&year=<?= $selectedYear ?>&month=<?= $selectedMonth ?>" 
-           target="_blank" class="btn btn-primary">
+        <button onclick="downloadBulanan()" class="btn btn-primary">
           <i class="fas fa-download"></i> Unduh PDF
-        </a>
-      </form>
-      <p style="font-size:13px;color:var(--muted)">
+        </button>
+      </div>
+      <p style="font-size:13px;color:var(--muted)" id="bulananLabel">
         Laporan bulan <strong><?= $namaBulan[(int)$selectedMonth] ?> <?= $selectedYear ?></strong>
       </p>
     </div>
@@ -87,11 +85,10 @@ $months = array_column($monthlyStats, 'total', 'bulan');
       <h2><i class="fas fa-chart-bar" style="color:var(--success)"></i> Laporan Tahunan</h2>
     </div>
     <div class="card-body">
-      <form method="GET" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px">
-        <input type="hidden" name="url" value="dashboard">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px">
         <div>
           <label class="form-label">Tahun</label>
-          <select name="yearAnnual" class="form-control" style="width:120px">
+          <select id="tahunanYear" class="form-control" style="width:120px">
             <?php if (empty($availableYears)): ?>
               <option><?= date('Y') ?></option>
             <?php else: ?>
@@ -101,10 +98,10 @@ $months = array_column($monthlyStats, 'total', 'bulan');
             <?php endif; ?>
           </select>
         </div>
-        <a href="#" id="btnDownloadTahunan" class="btn btn-success">
+        <button onclick="downloadTahunan()" class="btn btn-success">
           <i class="fas fa-download"></i> Unduh PDF
-        </a>
-      </form>
+        </button>
+      </div>
       <p style="font-size:13px;color:var(--muted)">Unduh laporan tahunan lengkap dalam format PDF.</p>
     </div>
   </div>
@@ -145,9 +142,27 @@ $months = array_column($monthlyStats, 'total', 'bulan');
 }
 </style>
 <script>
-document.getElementById('btnDownloadTahunan').addEventListener('click', function(e) {
-  e.preventDefault();
-  var year = document.querySelector('[name="yearAnnual"]').value;
-  window.open('<?= BASE_URL ?>/index.php?url=dashboard/downloadTahunan&year=' + year, '_blank');
-});
+var baseUrl    = '<?= BASE_URL ?>';
+var namaBulan  = <?= json_encode($namaBulan) ?>;
+
+function downloadBulanan() {
+  var year  = document.getElementById('bulananYear').value;
+  var month = document.getElementById('bulananMonth').value;
+  window.open(baseUrl + '/index.php?url=dashboard/downloadBulanan&year=' + year + '&month=' + month, '_blank');
+}
+
+function downloadTahunan() {
+  var year = document.getElementById('tahunanYear').value;
+  window.open(baseUrl + '/index.php?url=dashboard/downloadTahunan&year=' + year, '_blank');
+}
+
+// Update label keterangan saat dropdown berubah
+function updateBulananLabel() {
+  var month = document.getElementById('bulananMonth').value;
+  var year  = document.getElementById('bulananYear').value;
+  document.getElementById('bulananLabel').innerHTML =
+    'Laporan bulan <strong>' + namaBulan[month] + ' ' + year + '</strong>';
+}
+document.getElementById('bulananMonth').addEventListener('change', updateBulananLabel);
+document.getElementById('bulananYear').addEventListener('change', updateBulananLabel);
 </script>
