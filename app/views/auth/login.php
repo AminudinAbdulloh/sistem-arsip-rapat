@@ -115,7 +115,6 @@
     <div class="logo-icon"><i class="fas fa-archive"></i></div>
     <h2>Sistem Informasi Pengelolaan Arsip Rapat</h2>
     <p>Institut Teknologi Dirgantara Adisutjipto<br>Program Studi</p>
-    <div class="badge"><i class="fas fa-shield-alt"></i> Sistem Terproteksi</div>
   </div>
   <div class="login-right">
     <h3>Selamat Datang</h3>
@@ -142,10 +141,6 @@
       </div>
       <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> Masuk</button>
     </form>
-
-    <div class="info-default">
-      <strong>Demo Login:</strong> NIP: <code>123456789</code> | Password: <code>password</code>
-    </div>
   </div>
 </div>
 </body>
