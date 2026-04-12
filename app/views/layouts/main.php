@@ -34,8 +34,6 @@
     z-index: 100;
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
   }
-  .navbar-brand { color: white; font-weight: 700; font-size: 16px; }
-  .navbar-brand span { color: var(--accent); }
   .navbar-user { display: flex; align-items: center; gap: 12px; color: white; }
   .navbar-user img, .navbar-user .avatar {
     width: 38px; height: 38px; border-radius: 50%;
@@ -258,8 +256,8 @@
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-icon"><i class="fas fa-archive"></i></div>
-    <span>Arsip Rapat ITD<small>Adisutjipto</small></span>
+    <img src="<?= BASE_URL ?>/public/images/Logo_ITDA_HD.png" alt="Logo ITDA" style="width:42px;height:42px;object-fit:contain;flex-shrink:0;">
+    <span>Arsip Rapat Informatika<small>ITD Adisutjipto</small></span>
   </div>
   <nav class="sidebar-nav">
     <div class="nav-section">
@@ -286,7 +284,6 @@
 <header class="navbar">
   <div style="display:flex;align-items:center;gap:12px">
     <button class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-    <span class="navbar-brand">Arsip Rapat <span>ITD</span></span>
   </div>
   <div class="navbar-user">
     <div class="navbar-user-info">

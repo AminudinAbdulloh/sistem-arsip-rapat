@@ -112,7 +112,7 @@
 <body>
 <div class="login-wrapper">
   <div class="login-left">
-    <div class="logo-icon"><i class="fas fa-archive"></i></div>
+  <img src="<?= BASE_URL ?>/public/images/Logo_ITDA_HD.png" alt="Logo ITDA" style="width:110px;height:110px;object-fit:contain;margin-bottom:20px;">
     <h2>Sistem Informasi Pengelolaan Arsip Rapat</h2>
     <p>Institut Teknologi Dirgantara Adisutjipto<br>Program Studi</p>
   </div>
