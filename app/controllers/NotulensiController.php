@@ -34,9 +34,12 @@ class NotulensiController extends Controller {
         $error = '';
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $undanganId = (int)($_POST['undangan_id'] ?? 0);
+            $undanganData = $this->undanganModel->getById($undanganId);
 
-            if ($this->model->existsByUndanganId($undanganId)) {
-                $error = 'Undangan rapat ini sudah memiliki notulensi. Setiap undangan hanya boleh memiliki 1 notulensi.';
+            if ($undanganData && strtotime($undanganData['waktu']) > time()) {
+                $error = 'Notulensi tidak dapat dibuat sebelum rapat dimulai. Rapat dijadwalkan pada ' . date('d/m/Y H:i', strtotime($undanganData['waktu'])) . '.';
+            } elseif ($this->model->existsByUndanganId($undanganId)) {
+                $error = 'Undangan rapat ini sudah memiliki notulensi.';
             } else {
                 $dokumentasi = null;
                 if (!empty($_FILES['dokumentasi']['name'])) {
