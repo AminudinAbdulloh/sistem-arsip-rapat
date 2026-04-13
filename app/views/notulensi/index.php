@@ -42,7 +42,6 @@ $formatterLengkap = new IntlDateFormatter(
           <th>Hari/Tanggal Rapat</th>
           <th>Tema Rapat</th>
           <th width="110">Foto</th>
-          <th width="100">Dokumen</th>
           <th width="150">Aksi</th>
         </tr>
       </thead>
@@ -76,16 +75,6 @@ $formatterLengkap = new IntlDateFormatter(
             <?php else: ?>
               <span style="color:var(--muted);font-size:12px">—</span>
             <?php endif; ?>
-          </td>
-          <td>
-            <?php
-              // Count dokumen — kita ambil langsung lewat query sederhana di sini
-              // Untuk efisiensi, model getAll() bisa diperluas; untuk sekarang tampilkan link detail
-            ?>
-            <a href="<?= BASE_URL ?>/index.php?url=notulensi/detail/<?= $n['id'] ?>"
-               class="btn btn-sm btn-outline" title="Lihat dokumen pendukung">
-              <i class="fas fa-paperclip"></i> Lihat
-            </a>
           </td>
           <td>
             <div style="display:flex;gap:5px;flex-wrap:wrap">

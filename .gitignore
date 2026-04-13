@@ -1,5 +1,5 @@
 public/uploads/dokumentasi/*
-!public/uploads/dokumentasi/.gitkeep
+public/uploads/dokumen/*
 
 composer.*
 vendor
