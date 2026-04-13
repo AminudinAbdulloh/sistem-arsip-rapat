@@ -29,6 +29,7 @@ class UndanganController extends Controller {
                 'tempat'      => trim($_POST['tempat'] ?? ''),
                 'acara'       => trim($_POST['acara'] ?? ''),
                 'tgl_surat'   => $_POST['tgl_surat'] ?? date('Y-m-d'),
+                'dibuat_oleh' => $_SESSION['user_id'],
             ];
             if (empty($data['waktu']) || empty($data['tempat']) || empty($data['acara'])) {
                 $error = 'Semua field harus diisi.';

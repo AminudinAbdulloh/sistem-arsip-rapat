@@ -96,15 +96,14 @@ class DashboardController extends Controller {
   <p><em>Tidak ada data undangan rapat.</em></p>
 <?php else: ?>
 <table>
-  <tr><th>No</th><th>Hari</th><th>Waktu</th><th>Tempat</th><th>Acara</th><th>Dibuat Oleh</th></tr>
+  <tr><th>No</th><th>Hari/Tanggal</th><th>Waktu</th><th>Tempat</th><th>Agenda</th></tr>
   <?php foreach ($undangan as $i => $u): ?>
   <tr>
     <td><?= $i+1 ?></td>
-    <td><?= htmlspecialchars($u['hari']) ?></td>
+    <td><?= htmlspecialchars($u['waktu']) ?></td>
     <td><?= date('d/m/Y H:i', strtotime($u['waktu'])) ?></td>
     <td><?= htmlspecialchars($u['tempat']) ?></td>
     <td><?= htmlspecialchars($u['acara']) ?></td>
-    <td><?= htmlspecialchars($u['pembuat']) ?></td>
   </tr>
   <?php endforeach; ?>
 </table>
@@ -115,7 +114,7 @@ class DashboardController extends Controller {
   <p><em>Tidak ada data notulensi rapat.</em></p>
 <?php else: ?>
 <table>
-  <tr><th>No</th><th>Tgl Rapat</th><th>Tema</th><th>Deskripsi</th><th>Catatan</th><th>Dibuat Oleh</th></tr>
+  <tr><th>No</th><th>Tgl Rapat</th><th>Tema</th><th>Deskripsi</th><th>Catatan</th></tr>
   <?php foreach ($notulensi as $i => $n): ?>
   <tr>
     <td><?= $i+1 ?></td>
@@ -123,7 +122,6 @@ class DashboardController extends Controller {
     <td><?= htmlspecialchars($n['tema_rapat']) ?></td>
     <td><?= nl2br(htmlspecialchars(substr($n['deskripsi_rapat'], 0, 100))) ?>...</td>
     <td><?= htmlspecialchars(substr($n['catatan'] ?? '', 0, 80)) ?></td>
-    <td><?= htmlspecialchars($n['pembuat']) ?></td>
   </tr>
   <?php endforeach; ?>
 </table>

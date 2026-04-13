@@ -113,8 +113,8 @@
 <div class="login-wrapper">
   <div class="login-left">
   <img src="<?= BASE_URL ?>/public/images/Logo_ITDA_HD.png" alt="Logo ITDA" style="width:110px;height:110px;object-fit:contain;margin-bottom:20px;">
-    <h2>Sistem Informasi Pengelolaan Arsip Rapat</h2>
-    <p>Institut Teknologi Dirgantara Adisutjipto<br>Program Studi</p>
+    <h2>Sistem Informasi Pengelolaan Arsip Rapat Prodi Informatika</h2>
+    <p>Institut Teknologi Dirgantara Adisutjipto</p>
   </div>
   <div class="login-right">
     <h3>Selamat Datang</h3>
