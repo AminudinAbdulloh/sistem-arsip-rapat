@@ -18,6 +18,44 @@ USE `arsip_rapat_itd`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `notulensi_dokumen`
+--
+
+DROP TABLE IF EXISTS `notulensi_dokumen`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `notulensi_dokumen` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `notulensi_id` int NOT NULL,
+  `filename` varchar(255) NOT NULL,
+  `original_name` varchar(255) NOT NULL,
+  `mime_type` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `notulensi_id` (`notulensi_id`),
+  CONSTRAINT `notulensi_dokumen_ibfk_1` FOREIGN KEY (`notulensi_id`) REFERENCES `notulensi_rapat` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `notulensi_dokumentasi`
+--
+
+DROP TABLE IF EXISTS `notulensi_dokumentasi`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `notulensi_dokumentasi` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `notulensi_id` int NOT NULL,
+  `filename` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `notulensi_id` (`notulensi_id`),
+  CONSTRAINT `notulensi_dokumentasi_ibfk_1` FOREIGN KEY (`notulensi_id`) REFERENCES `notulensi_rapat` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `notulensi_rapat`
 --
 
@@ -29,7 +67,6 @@ CREATE TABLE `notulensi_rapat` (
   `undangan_id` int NOT NULL,
   `deskripsi_rapat` text NOT NULL,
   `catatan` text,
-  `dokumentasi` varchar(255) DEFAULT NULL,
   `dibuat_oleh` int NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -38,7 +75,7 @@ CREATE TABLE `notulensi_rapat` (
   KEY `dibuat_oleh` (`dibuat_oleh`),
   CONSTRAINT `notulensi_rapat_ibfk_1` FOREIGN KEY (`undangan_id`) REFERENCES `undangan_rapat` (`id`) ON DELETE CASCADE,
   CONSTRAINT `notulensi_rapat_ibfk_2` FOREIGN KEY (`dibuat_oleh`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -60,7 +97,7 @@ CREATE TABLE `undangan_rapat` (
   PRIMARY KEY (`id`),
   KEY `dibuat_oleh` (`dibuat_oleh`),
   CONSTRAINT `undangan_rapat_ibfk_1` FOREIGN KEY (`dibuat_oleh`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -91,9 +128,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-12 13:05:45
-
--- Default user: NIP=123456789, Password=password
-INSERT INTO users (nip, nama, password) VALUES 
-('123456789', 'Admin ITD Adisutjipto', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
--- password: password
+-- Dump completed on 2026-04-13 23:11:40
