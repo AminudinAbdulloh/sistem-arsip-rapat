@@ -116,7 +116,6 @@ $formatterLengkap = new IntlDateFormatter(
   }
 
   @media (max-width:768px) {
-    .detail-grid { grid-template-columns: 1fr !important; }
     .foto-gallery { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
   }
 </style>
@@ -136,63 +135,36 @@ $formatterLengkap = new IntlDateFormatter(
   <div class="card-body">
 
     <!-- Info Rapat -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" class="detail-grid">
-      <div>
-        <h3 style="font-size:13px;color:var(--muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px">Informasi Rapat</h3>
-        <table style="width:100%;font-size:14px">
-          <tr>
-            <td style="padding:8px 0;color:var(--muted);width:150px;vertical-align:top">
-              <i class="fas fa-calendar" style="color:var(--primary-light)"></i> <strong>Hari/Tanggal</strong>
-            </td>
-            <td style="padding:8px 0">
-              <strong>
-                <?php
-                  $dt = new DateTime($notulensi['tgl_rapat']);
-                  $formatterLengkap->setPattern("EEEE / d MMMM y");
-                  echo $formatterLengkap->format($dt);
-                ?>
-              </strong>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:8px 0;color:var(--muted);vertical-align:top">
-              <i class="fas fa-clipboard" style="color:var(--warning)"></i> <strong>Tema Rapat</strong>
-            </td>
-            <td style="padding:8px 0"><?= htmlspecialchars($notulensi['tema_rapat']) ?></td>
-          </tr>
-          <tr>
-            <td style="padding:8px 0;color:var(--muted);vertical-align:top">
-              <i class="fas fa-map-marker-alt" style="color:var(--danger)"></i> <strong>Tempat</strong>
-            </td>
-            <td style="padding:8px 0"><?= htmlspecialchars($notulensi['tempat']) ?></td>
-          </tr>
-        </table>
-      </div>
-
-      <!-- Thumbnail galeri (3 teratas) -->
-      <div>
-        <?php if (!empty($notulensi['dokumentasi_list'])): ?>
-        <h3 style="font-size:13px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">
-          Dokumentasi Foto (<?= count($notulensi['dokumentasi_list']) ?>)
-        </h3>
-        <div class="foto-gallery">
-          <?php foreach ($notulensi['dokumentasi_list'] as $fi => $foto): ?>
-          <div class="foto-gallery-item" onclick="openLightbox(<?= $fi ?>)" title="Klik untuk perbesar">
-            <img src="<?= BASE_URL ?>/public/uploads/dokumentasi/<?= htmlspecialchars($foto['filename']) ?>"
-                 alt="Foto <?= $fi + 1 ?>" loading="lazy">
-            <div class="foto-overlay"><i class="fas fa-search-plus"></i></div>
-            <span class="foto-num"><?= $fi + 1 ?></span>
-          </div>
-          <?php endforeach; ?>
-        </div>
-        <?php else: ?>
-        <div style="background:#f8fafc;border-radius:8px;padding:36px;text-align:center;
-                    color:var(--muted);border:2px dashed var(--border)">
-          <i class="fas fa-image" style="font-size:32px;opacity:.3;display:block;margin-bottom:8px"></i>
-          Tidak ada dokumentasi foto
-        </div>
-        <?php endif; ?>
-      </div>
+    <div>
+      <h3 style="font-size:13px;color:var(--muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px">Informasi Rapat</h3>
+      <table style="width:100%;font-size:14px;max-width:500px">
+        <tr>
+          <td style="padding:8px 0;color:var(--muted);width:160px;vertical-align:top">
+            <i class="fas fa-calendar" style="color:var(--primary-light)"></i> <strong>Hari/Tanggal</strong>
+          </td>
+          <td style="padding:8px 0">
+            <strong>
+              <?php
+                $dt = new DateTime($notulensi['tgl_rapat']);
+                $formatterLengkap->setPattern("EEEE / d MMMM y");
+                echo $formatterLengkap->format($dt);
+              ?>
+            </strong>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:var(--muted);vertical-align:top">
+            <i class="fas fa-clipboard" style="color:var(--warning)"></i> <strong>Tema Rapat</strong>
+          </td>
+          <td style="padding:8px 0"><?= htmlspecialchars($notulensi['tema_rapat']) ?></td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:var(--muted);vertical-align:top">
+            <i class="fas fa-map-marker-alt" style="color:var(--danger)"></i> <strong>Tempat</strong>
+          </td>
+          <td style="padding:8px 0"><?= htmlspecialchars($notulensi['tempat']) ?></td>
+        </tr>
+      </table>
     </div>
 
     <hr style="border:none;border-top:1px solid var(--border);margin:24px 0">
@@ -212,9 +184,39 @@ $formatterLengkap = new IntlDateFormatter(
     </div>
     <?php endif; ?>
 
-    <!-- Dokumen Pendukung -->
-    <?php if (!empty($notulensi['dokumen_list'])): ?>
+    <!-- Dokumentasi Foto -->
     <hr style="border:none;border-top:1px solid var(--border);margin:24px 0">
+    <div class="form-group">
+      <label class="form-label" style="font-size:15px">
+        <i class="fas fa-images" style="color:var(--primary-light)"></i>
+        Dokumentasi Foto
+        <?php if (!empty($notulensi['dokumentasi_list'])): ?>
+          <span>(<?= count($notulensi['dokumentasi_list']) ?> foto)</span>
+        <?php endif; ?>
+      </label>
+      <?php if (!empty($notulensi['dokumentasi_list'])): ?>
+      <div class="foto-gallery">
+        <?php foreach ($notulensi['dokumentasi_list'] as $fi => $foto): ?>
+        <div class="foto-gallery-item" onclick="openLightbox(<?= $fi ?>)" title="Klik untuk perbesar">
+          <img src="<?= BASE_URL ?>/public/uploads/dokumentasi/<?= htmlspecialchars($foto['filename']) ?>"
+               alt="Foto <?= $fi + 1 ?>" loading="lazy">
+          <div class="foto-overlay"><i class="fas fa-search-plus"></i></div>
+          <span class="foto-num"><?= $fi + 1 ?></span>
+        </div>
+        <?php endforeach; ?>
+      </div>
+      <?php else: ?>
+      <div style="background:#f8fafc;border-radius:8px;padding:36px;text-align:center;
+                  color:var(--muted);border:2px dashed var(--border)">
+        <i class="fas fa-image" style="font-size:32px;opacity:.3;display:block;margin-bottom:8px"></i>
+        Tidak ada dokumentasi foto
+      </div>
+      <?php endif; ?>
+    </div>
+
+    <!-- Dokumen Pendukung -->
+    <hr style="border:none;border-top:1px solid var(--border);margin:24px 0">
+    <?php if (!empty($notulensi['dokumen_list'])): ?>
     <div class="form-group">
       <label class="form-label" style="font-size:15px">
         <i class="fas fa-paperclip" style="color:var(--warning)"></i>
@@ -250,7 +252,6 @@ $formatterLengkap = new IntlDateFormatter(
       </div>
     </div>
     <?php else: ?>
-    <hr style="border:none;border-top:1px solid var(--border);margin:24px 0">
     <div style="background:#f8fafc;border-radius:8px;padding:20px;text-align:center;
                 color:var(--muted);border:1px dashed var(--border);font-size:14px">
       <i class="fas fa-paperclip" style="opacity:.3;margin-right:6px"></i>
@@ -271,7 +272,7 @@ $formatterLengkap = new IntlDateFormatter(
   <div class="lightbox-counter" id="lightboxCounter"></div>
 </div>
 <script>
-var lbFotos = <?= json_encode(array_map(function($f) use ($notulensi) {
+var lbFotos = <?= json_encode(array_map(function($f) {
   return BASE_URL . '/public/uploads/dokumentasi/' . $f['filename'];
 }, $notulensi['dokumentasi_list'])) ?>;
 var lbCurrent = 0;

@@ -287,17 +287,17 @@ updateUndanganInfo();
 
 // ---- Toggle hapus foto existing ----
 function toggleHapusFoto(cb, id) {
-  var wrap = document.getElementById('foto-wrap-' + id);
+  var wrap  = document.getElementById('foto-wrap-' + id);
   var badge = document.getElementById('badge-foto-' + id);
   if (cb.checked) {
     wrap.style.opacity = '0.4';
-    wrap.style.border = '2px solid var(--danger)';
-    badge.innerHTML = '<i class="fas fa-times" style="color:#ef4444"></i>';
+    wrap.style.border  = '2px solid var(--danger)';
+    badge.innerHTML    = '<i class="fas fa-times" style="color:#ef4444"></i>';
     badge.style.background = 'rgba(239,68,68,.7)';
   } else {
     wrap.style.opacity = '1';
-    wrap.style.border = '2px solid var(--border)';
-    badge.innerHTML = '<i class="fas fa-check" style="opacity:0.3"></i>';
+    wrap.style.border  = '2px solid var(--border)';
+    badge.innerHTML    = '<i class="fas fa-check" style="opacity:0.3"></i>';
     badge.style.background = 'rgba(0,0,0,.4)';
   }
 }
@@ -307,11 +307,11 @@ function toggleHapusDok(cb, id) {
   var wrap = document.getElementById('dok-wrap-' + id);
   if (cb.checked) {
     wrap.style.opacity = '0.45';
-    wrap.style.border = '1px solid var(--danger)';
+    wrap.style.border  = '1px solid var(--danger)';
     wrap.style.background = '#fef2f2';
   } else {
     wrap.style.opacity = '1';
-    wrap.style.border = '1px solid var(--border)';
+    wrap.style.border  = '1px solid var(--border)';
     wrap.style.background = '';
   }
 }
@@ -325,13 +325,38 @@ function toggleHapusDok(cb, id) {
   zone.addEventListener('drop',      function()  { zone.classList.remove('drag-over'); });
 });
 
-// ---- Preview foto baru ----
+// ============================================================
+// Akumulasi file — simpan di array JS, inject via FormData
+// ============================================================
 var newFotos = [];
+var newDoks  = [];
+
+// -- Foto: tambah file baru ke array --
 document.getElementById('fotoInput').addEventListener('change', function() {
-  newFotos = Array.from(this.files);
+  Array.from(this.files).forEach(function(file) {
+    var isDup = newFotos.some(function(f) {
+      return f.name === file.name && f.size === file.size;
+    });
+    if (!isDup) newFotos.push(file);
+  });
+  // Reset value agar bisa pilih file yang sama lagi
+  this.value = '';
   renderNewFotos();
 });
 
+// -- Dokumen: tambah file baru ke array --
+document.getElementById('dokInput').addEventListener('change', function() {
+  Array.from(this.files).forEach(function(file) {
+    var isDup = newDoks.some(function(f) {
+      return f.name === file.name && f.size === file.size;
+    });
+    if (!isDup) newDoks.push(file);
+  });
+  this.value = '';
+  renderNewDoks();
+});
+
+// -- Render preview foto baru --
 function renderNewFotos() {
   var grid = document.getElementById('newFotoGrid');
   grid.innerHTML = '';
@@ -340,7 +365,6 @@ function renderNewFotos() {
     reader.onload = function(e) {
       var div = document.createElement('div');
       div.className = 'foto-item';
-      div.id = 'nfoto-' + idx;
       div.innerHTML =
         '<img src="' + e.target.result + '" alt="">' +
         '<span class="foto-new-badge">Baru</span>' +
@@ -356,37 +380,22 @@ function renderNewFotos() {
 
 function removeNewFoto(idx) {
   newFotos.splice(idx, 1);
-  rebuildFotoInput();
   renderNewFotos();
 }
 
-function rebuildFotoInput() {
-  var dt = new DataTransfer();
-  newFotos.forEach(function(f) { dt.items.add(f); });
-  document.getElementById('fotoInput').files = dt.files;
-}
-
-// ---- Preview dokumen baru ----
-var newDoks = [];
-document.getElementById('dokInput').addEventListener('change', function() {
-  newDoks = Array.from(this.files);
-  renderNewDoks();
-});
-
+// -- Render preview dokumen baru --
 function renderNewDoks() {
   var list = document.getElementById('newDokList');
   list.innerHTML = '';
   newDoks.forEach(function(file, idx) {
     var icon  = getDokIcon(file.type);
     var color = getDokColor(file.type);
-    var size  = formatSize(file.size);
     var div   = document.createElement('div');
     div.className = 'dok-item';
-    div.id = 'ndok-' + idx;
     div.innerHTML =
       '<i class="fas ' + icon + ' dok-icon" style="color:' + color + '"></i>' +
       '<span class="dok-name">' + escHtml(file.name) + '</span>' +
-      '<span class="dok-size">' + size + '</span>' +
+      '<span class="dok-size">' + formatSize(file.size) + '</span>' +
       '<span class="dok-new">Baru</span>' +
       '<button type="button" class="dok-del" onclick="removeNewDok(' + idx + ')"><i class="fas fa-times"></i> Hapus</button>';
     list.appendChild(div);
@@ -395,34 +404,71 @@ function renderNewDoks() {
 
 function removeNewDok(idx) {
   newDoks.splice(idx, 1);
-  rebuildDokInput();
   renderNewDoks();
 }
 
-function rebuildDokInput() {
-  var dt = new DataTransfer();
-  newDoks.forEach(function(f) { dt.items.add(f); });
-  document.getElementById('dokInput').files = dt.files;
-}
+// ============================================================
+// Submit — inject file dari array ke FormData, kirim via fetch
+// ============================================================
+document.getElementById('mainForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  var form = this;
+  var fd   = new FormData(form);
+
+  // Hapus entry file dari FormData bawaan (kosong karena input di-reset)
+  fd.delete('dokumentasi[]');
+  fd.delete('dokumen_pendukung[]');
+
+  // Inject file yang terakumulasi di array
+  newFotos.forEach(function(f) { fd.append('dokumentasi[]', f, f.name); });
+  newDoks.forEach(function(f)  { fd.append('dokumen_pendukung[]', f, f.name); });
+
+  // Nonaktifkan tombol submit supaya tidak dobel-klik
+  var submitBtn = form.querySelector('button[type=submit]');
+  var origText  = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+  fetch(form.action || window.location.href, {
+    method: 'POST',
+    body: fd,
+  })
+  .then(function(res) {
+    // Server biasanya redirect setelah simpan — ikuti redirect-nya
+    if (res.redirected) {
+      window.location.href = res.url;
+    } else {
+      // Kalau tidak redirect, muat ulang halaman untuk tampilkan flash message
+      window.location.reload();
+    }
+  })
+  .catch(function(err) {
+    console.error(err);
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = origText;
+    alert('Gagal mengirim data. Coba lagi.');
+  });
+});
 
 // ---- Utils ----
 function getDokIcon(mime) {
-  if (mime.includes('pdf'))         return 'fa-file-pdf';
-  if (mime.includes('word'))        return 'fa-file-word';
+  if (mime.includes('pdf'))          return 'fa-file-pdf';
+  if (mime.includes('word'))         return 'fa-file-word';
   if (mime.includes('excel') || mime.includes('spreadsheet')) return 'fa-file-excel';
   if (mime.includes('presentation') || mime.includes('powerpoint')) return 'fa-file-powerpoint';
   return 'fa-file-alt';
 }
 function getDokColor(mime) {
-  if (mime.includes('pdf'))         return '#ef4444';
-  if (mime.includes('word'))        return '#2563eb';
+  if (mime.includes('pdf'))          return '#ef4444';
+  if (mime.includes('word'))         return '#2563eb';
   if (mime.includes('excel') || mime.includes('spreadsheet')) return '#10b981';
   if (mime.includes('presentation') || mime.includes('powerpoint')) return '#f59e0b';
   return '#6b7280';
 }
 function formatSize(bytes) {
-  if (bytes < 1024)       return bytes + ' B';
-  if (bytes < 1048576)    return (bytes / 1024).toFixed(1) + ' KB';
+  if (bytes < 1024)    return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
   return (bytes / 1048576).toFixed(1) + ' MB';
 }
 function escHtml(str) {
