@@ -323,6 +323,7 @@
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeDeleteModal()">Batal</button>
       <form id="deleteForm" method="POST">
+        <input type="hidden" name="csrf_token" value="<?= $this->generateCsrfToken() ?>">
         <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Hapus</button>
       </form>
     </div>

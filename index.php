@@ -6,7 +6,6 @@ session_set_cookie_params([
     'httponly' => true,
     'samesite' => 'Lax',
 ]);
-
 session_start();
 
 $sessionLifetime = 3600; // 1 jam
@@ -16,6 +15,13 @@ if (isset($_SESSION['last_active']) && (time() - $_SESSION['last_active']) > $se
     exit;
 }
 $_SESSION['last_active'] = time();
+
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
+}
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
 
 require_once __DIR__ . '/config/database.php';
 
