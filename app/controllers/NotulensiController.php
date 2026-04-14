@@ -2,168 +2,85 @@
 require_once BASE_PATH . '/app/controllers/Controller.php';
 require_once BASE_PATH . '/app/models/Notulensi.php';
 require_once BASE_PATH . '/app/models/Undangan.php';
+require_once BASE_PATH . '/app/helpers/FileUploadHelper.php';
 
-class NotulensiController extends Controller {
-    private $model;
-    private $undanganModel;
+class NotulensiController extends Controller
+{
+    private Notulensi $model;
+    private Undangan  $undanganModel;
 
-    // Direktori upload
-    const DIR_FOTO    = '/public/uploads/dokumentasi/';
-    const DIR_DOKUMEN = '/public/uploads/dokumen/';
+    private const DIR_FOTO    = '/public/uploads/dokumentasi/';
+    private const DIR_DOKUMEN = '/public/uploads/dokumen/';
 
-    // Tipe yang diizinkan
-    const ALLOWED_FOTO    = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    const ALLOWED_DOKUMEN = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/vnd.ms-powerpoint',
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    ];
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB per file
-
-    public function __construct() {
-        $this->model = new Notulensi();
+    public function __construct()
+    {
+        $this->model         = new Notulensi();
         $this->undanganModel = new Undangan();
-
-        // Pastikan direktori upload ada
-        foreach ([self::DIR_FOTO, self::DIR_DOKUMEN] as $dir) {
-            $path = BASE_PATH . $dir;
-            if (!is_dir($path)) mkdir($path, 0755, true);
-        }
     }
 
-    // -------------------------------------------------------
-    // INDEX
-    // -------------------------------------------------------
-    public function index($param = null) {
+    // ----------------------------------------------------------------
+    // CRUD
+    // ----------------------------------------------------------------
+
+    public function index(): void
+    {
         $this->requireLogin();
-        $notulensi = $this->model->getAll();
-        $this->view('layouts/main', [
-            'title'     => 'Notulensi Rapat',
-            'content'   => 'notulensi/index',
-            'notulensi' => $notulensi,
+        $this->renderMain('Notulensi Rapat', 'notulensi/index', [
+            'notulensi' => $this->model->getAll(),
         ]);
     }
 
-    // -------------------------------------------------------
-    // CREATE
-    // -------------------------------------------------------
-    public function create($param = null) {
+    public function create(): void
+    {
         $this->requireLogin();
-        $undanganList = $this->undanganModel->getUndanganTanpaNotulensi();
 
+        $undanganList = $this->undanganModel->getUndanganTanpaNotulensi();
         if (empty($undanganList)) {
-            $_SESSION['flash'] = ['type' => 'warning', 'msg' => 'Semua undangan rapat sudah memiliki notulensi, atau belum ada undangan. Silakan buat undangan terlebih dahulu.'];
+            $this->flashWarning('Semua undangan rapat sudah memiliki notulensi, atau belum ada undangan. Silakan buat undangan terlebih dahulu.');
             $this->redirect('notulensi');
         }
 
         $error = '';
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $undanganId = (int)($_POST['undangan_id'] ?? 0);
-            $undanganData = $this->undanganModel->getById($undanganId);
 
-            if (!$undanganData) {
-                $error = 'Undangan rapat tidak ditemukan.';
-            } elseif (strtotime($undanganData['waktu']) > time()) {
-                $error = 'Notulensi tidak dapat dibuat sebelum rapat dimulai. Rapat dijadwalkan pada ' . date('d/m/Y H:i', strtotime($undanganData['waktu'])) . '.';
-            } elseif ($this->model->existsByUndanganId($undanganId)) {
-                $error = 'Undangan rapat ini sudah memiliki notulensi.';
-            } else {
-                $deskripsi = trim($_POST['deskripsi_rapat'] ?? '');
-                $catatan   = trim($_POST['catatan'] ?? '');
+        if ($this->isPost()) {
+            $undanganId = (int) $this->input('undangan_id', 0);
+            $error      = $this->validateUndangan($undanganId, isNew: true);
 
-                if (!$undanganId || empty($deskripsi)) {
-                    $error = 'Pilih undangan rapat dan isi deskripsi rapat.';
+            if (!$error) {
+                $id = $this->model->create($this->buildNotulensiData($undanganId));
+                if (!$id) {
+                    $error = 'Gagal menyimpan data.';
                 } else {
-                    // Simpan data utama dulu
-                    $notulensiId = $this->model->create([
-                        'undangan_id'     => $undanganId,
-                        'deskripsi_rapat' => $deskripsi,
-                        'catatan'         => $catatan,
-                        'dibuat_oleh'     => $_SESSION['user_id'],
-                    ]);
-
-                    if (!$notulensiId) {
-                        $error = 'Gagal menyimpan data.';
-                    } else {
-                        // Upload multiple foto dokumentasi
-                        $fotoError = $this->uploadFotoMultiple($notulensiId, 'dokumentasi');
-                        // Upload multiple dokumen pendukung
-                        $dokError  = $this->uploadDokumenMultiple($notulensiId, 'dokumen_pendukung');
-
-                        $uploadError = $fotoError ?: $dokError;
-                        if ($uploadError) {
-                            // Data tersimpan tapi ada error upload file
-                            $_SESSION['flash'] = ['type' => 'warning', 'msg' => 'Notulensi tersimpan, namun ada file yang gagal diupload: ' . $uploadError];
-                        } else {
-                            $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Notulensi rapat berhasil ditambahkan.'];
-                        }
-                        $this->redirect('notulensi');
-                    }
+                    $uploadErrors = $this->uploadAllFiles($id);
+                    $this->flashAfterUpload('Notulensi rapat berhasil ditambahkan.', $uploadErrors);
+                    $this->redirect('notulensi');
                 }
             }
         }
 
-        $this->view('layouts/main', [
-            'title'        => 'Tambah Notulensi Rapat',
-            'content'      => 'notulensi/form',
+        $this->renderMain('Tambah Notulensi Rapat', 'notulensi/form', [
             'error'        => $error,
             'undanganList' => $undanganList,
             'notulensi'    => null,
         ]);
     }
 
-    // -------------------------------------------------------
-    // EDIT
-    // -------------------------------------------------------
-    public function edit($id) {
+    public function edit(string $id): void
+    {
         $this->requireLogin();
-        $notulensi = $this->model->getById($id);
-        if (!$notulensi) { $this->redirect('notulensi'); }
-
+        $notulensi    = $this->findOrRedirect((int) $id);
         $undanganList = $this->undanganModel->getAll();
-        $error = '';
+        $error        = '';
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $undanganId = (int)($_POST['undangan_id'] ?? 0);
+        if ($this->isPost()) {
+            $undanganId = (int) $this->input('undangan_id', 0);
+            $error      = $this->validateUndangan($undanganId, isNew: false, currentId: (int) $notulensi['undangan_id']);
 
-            if ($undanganId !== (int)$notulensi['undangan_id'] && $this->model->existsByUndanganId($undanganId)) {
-                $error = 'Undangan rapat yang dipilih sudah memiliki notulensi lain.';
-            } else {
-                $deskripsi = trim($_POST['deskripsi_rapat'] ?? '');
-                $catatan   = trim($_POST['catatan'] ?? '');
-
-                if ($this->model->update($id, [
-                    'undangan_id'     => $undanganId,
-                    'deskripsi_rapat' => $deskripsi,
-                    'catatan'         => $catatan,
-                ])) {
-                    // Hapus foto yang dipilih user untuk dihapus
-                    $hapusFoto = $_POST['hapus_dokumentasi'] ?? [];
-                    foreach ($hapusFoto as $fotoId) {
-                        $this->model->deleteDokumentasi((int)$fotoId);
-                    }
-
-                    // Hapus dokumen yang dipilih user untuk dihapus
-                    $hapusDok = $_POST['hapus_dokumen'] ?? [];
-                    foreach ($hapusDok as $dokId) {
-                        $this->model->deleteDokumen((int)$dokId);
-                    }
-
-                    // Upload foto baru
-                    $fotoError = $this->uploadFotoMultiple($id, 'dokumentasi');
-                    // Upload dokumen baru
-                    $dokError  = $this->uploadDokumenMultiple($id, 'dokumen_pendukung');
-
-                    $uploadError = $fotoError ?: $dokError;
-                    if ($uploadError) {
-                        $_SESSION['flash'] = ['type' => 'warning', 'msg' => 'Notulensi diperbarui, namun ada file yang gagal diupload: ' . $uploadError];
-                    } else {
-                        $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Notulensi rapat berhasil diperbarui.'];
-                    }
+            if (!$error) {
+                if ($this->model->update((int) $id, $this->buildNotulensiData($undanganId))) {
+                    $this->deleteCheckedFiles((int) $id);
+                    $uploadErrors = $this->uploadAllFiles((int) $id);
+                    $this->flashAfterUpload('Notulensi rapat berhasil diperbarui.', $uploadErrors);
                     $this->redirect('notulensi');
                 } else {
                     $error = 'Gagal memperbarui data.';
@@ -171,154 +88,165 @@ class NotulensiController extends Controller {
             }
         }
 
-        // Reload dengan file terbaru
-        $notulensi = $this->model->getById($id);
-        $this->view('layouts/main', [
-            'title'        => 'Edit Notulensi Rapat',
-            'content'      => 'notulensi/form',
+        $this->renderMain('Edit Notulensi Rapat', 'notulensi/form', [
             'error'        => $error,
             'undanganList' => $undanganList,
-            'notulensi'    => $notulensi,
+            'notulensi'    => $this->model->getById((int) $id),
         ]);
     }
 
-    // -------------------------------------------------------
-    // DELETE
-    // -------------------------------------------------------
-    public function delete($id) {
+    public function delete(string $id): void
+    {
         $this->requireLogin();
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Hapus semua file terkait
-            $this->model->deleteAllDokumentasi($id);
-            $this->model->deleteAllDokumen($id);
-            $this->model->delete($id);
-            $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Notulensi rapat berhasil dihapus.'];
+        if ($this->isPost()) {
+            $intId = (int) $id;
+            $this->model->deleteAllDokumentasi($intId);
+            $this->model->deleteAllDokumen($intId);
+            $this->model->delete($intId);
+            $this->flashSuccess('Notulensi rapat berhasil dihapus.');
         }
         $this->redirect('notulensi');
     }
 
-    // -------------------------------------------------------
-    // DETAIL
-    // -------------------------------------------------------
-    public function detail($id) {
+    public function detail(string $id): void
+    {
         $this->requireLogin();
+        $this->renderMain('Detail Notulensi Rapat', 'notulensi/detail', [
+            'notulensi' => $this->findOrRedirect((int) $id),
+        ]);
+    }
+
+    // ----------------------------------------------------------------
+    // Hapus file individual (via POST)
+    // ----------------------------------------------------------------
+
+    public function deleteFoto(string $id): void
+    {
+        $this->requireLogin();
+        if ($this->isPost()) {
+            $this->model->deleteDokumentasi((int) $id);
+        }
+        $this->redirectToReferer();
+    }
+
+    public function deleteDokumen(string $id): void
+    {
+        $this->requireLogin();
+        if ($this->isPost()) {
+            $this->model->deleteDokumen((int) $id);
+        }
+        $this->redirectToReferer();
+    }
+
+    // ----------------------------------------------------------------
+    // Private helpers — validasi
+    // ----------------------------------------------------------------
+
+    private function validateUndangan(int $undanganId, bool $isNew, int $currentId = 0): string
+    {
+        $undangan = $this->undanganModel->getById($undanganId);
+
+        if (!$undangan) {
+            return 'Undangan rapat tidak ditemukan.';
+        }
+
+        // Cek waktu — notulensi tidak bisa dibuat sebelum rapat dimulai
+        if ($isNew && strtotime($undangan['waktu']) > time()) {
+            return 'Notulensi tidak dapat dibuat sebelum rapat dimulai. Rapat dijadwalkan pada '
+                . date('d/m/Y H:i', strtotime($undangan['waktu'])) . '.';
+        }
+
+        // Cek duplikasi (boleh jika undangan_id sama dengan milik notulensi saat ini)
+        if ($undanganId !== $currentId && $this->model->existsByUndanganId($undanganId)) {
+            return 'Undangan rapat yang dipilih sudah memiliki notulensi.';
+        }
+
+        return '';
+    }
+
+    private function buildNotulensiData(int $undanganId): array
+    {
+        return [
+            'undangan_id'     => $undanganId,
+            'deskripsi_rapat' => $this->trimInput('deskripsi_rapat'),
+            'catatan'         => $this->trimInput('catatan'),
+            'dibuat_oleh'     => $_SESSION['user_id'],
+        ];
+    }
+
+    // ----------------------------------------------------------------
+    // Private helpers — upload
+    // ----------------------------------------------------------------
+
+    /**
+     * Upload foto dokumentasi + dokumen pendukung sekaligus.
+     * Mengembalikan string error gabungan (kosong jika semua sukses).
+     */
+    private function uploadAllFiles(int $notulensiId): string
+    {
+        $fotoErrors = FileUploadHelper::uploadMultiple(
+            inputName:    'dokumentasi',
+            destDir:      BASE_PATH . self::DIR_FOTO,
+            prefix:       'dok',
+            allowedMimes: FileUploadHelper::ALLOWED_IMAGE,
+            maxSize:      FileUploadHelper::MAX_SIZE,
+            onSuccess:    fn($filename) => $this->model->addDokumentasi($notulensiId, $filename)
+        );
+
+        $dokErrors = FileUploadHelper::uploadMultiple(
+            inputName:    'dokumen_pendukung',
+            destDir:      BASE_PATH . self::DIR_DOKUMEN,
+            prefix:       'dukung',
+            allowedMimes: FileUploadHelper::ALLOWED_DOCUMENT,
+            maxSize:      FileUploadHelper::MAX_SIZE,
+            onSuccess:    fn($filename, $originalName, $mimeType)
+                              => $this->model->addDokumen($notulensiId, $filename, $originalName, $mimeType)
+        );
+
+        $all = array_merge($fotoErrors, $dokErrors);
+        return empty($all) ? '' : implode(', ', $all);
+    }
+
+    /** Hapus file yang dicentang oleh user di form edit. */
+    private function deleteCheckedFiles(int $notulensiId): void
+    {
+        foreach ($_POST['hapus_dokumentasi'] ?? [] as $fotoId) {
+            $this->model->deleteDokumentasi((int) $fotoId);
+        }
+        foreach ($_POST['hapus_dokumen'] ?? [] as $dokId) {
+            $this->model->deleteDokumen((int) $dokId);
+        }
+    }
+
+    // ----------------------------------------------------------------
+    // Private helpers — lain-lain
+    // ----------------------------------------------------------------
+
+    private function findOrRedirect(int $id): array
+    {
         $notulensi = $this->model->getById($id);
-        if (!$notulensi) { $this->redirect('notulensi'); }
-
-        $this->view('layouts/main', [
-            'title'     => 'Detail Notulensi Rapat',
-            'content'   => 'notulensi/detail',
-            'notulensi' => $notulensi,
-        ]);
+        if (!$notulensi) {
+            $this->redirect('notulensi');
+        }
+        return $notulensi;
     }
 
-    // -------------------------------------------------------
-    // DELETE SINGLE FOTO (AJAX / redirect)
-    // -------------------------------------------------------
-    public function deleteFoto($id) {
-        $this->requireLogin();
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->model->deleteDokumentasi((int)$id);
+    private function flashAfterUpload(string $successMsg, string $uploadErrors): void
+    {
+        if ($uploadErrors) {
+            $this->flashWarning($successMsg . ' Namun ada file yang gagal diupload: ' . $uploadErrors);
+        } else {
+            $this->flashSuccess($successMsg);
         }
-        // Redirect kembali ke referer atau notulensi
-        $ref = $_SERVER['HTTP_REFERER'] ?? null;
-        if ($ref) { header('Location: ' . $ref); exit; }
+    }
+
+    private function redirectToReferer(): void
+    {
+        $referer = $_SERVER['HTTP_REFERER'] ?? null;
+        if ($referer) {
+            header('Location: ' . $referer);
+            exit;
+        }
         $this->redirect('notulensi');
-    }
-
-    // -------------------------------------------------------
-    // DELETE SINGLE DOKUMEN (AJAX / redirect)
-    // -------------------------------------------------------
-    public function deleteDokumen($id) {
-        $this->requireLogin();
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->model->deleteDokumen((int)$id);
-        }
-        $ref = $_SERVER['HTTP_REFERER'] ?? null;
-        if ($ref) { header('Location: ' . $ref); exit; }
-        $this->redirect('notulensi');
-    }
-
-    // -------------------------------------------------------
-    // HELPER: Upload multiple foto
-    // -------------------------------------------------------
-    private function uploadFotoMultiple($notulensiId, $inputName) {
-        if (empty($_FILES[$inputName]['name'][0])) return null;
-
-        $files = $_FILES[$inputName];
-        $errors = [];
-
-        for ($i = 0; $i < count($files['name']); $i++) {
-            if (empty($files['name'][$i])) continue;
-            if ($files['error'][$i] !== UPLOAD_ERR_OK) {
-                $errors[] = $files['name'][$i] . ' (error upload)';
-                continue;
-            }
-            if ($files['size'][$i] > self::MAX_FILE_SIZE) {
-                $errors[] = $files['name'][$i] . ' (ukuran melebihi 10MB)';
-                continue;
-            }
-            if (!in_array($files['type'][$i], self::ALLOWED_FOTO)) {
-                $errors[] = $files['name'][$i] . ' (format tidak didukung)';
-                continue;
-            }
-            $ext      = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
-            $filename = 'dok_' . time() . '_' . $notulensiId . '_' . rand(1000, 9999) . '.' . $ext;
-            $dest     = BASE_PATH . self::DIR_FOTO . $filename;
-            if (move_uploaded_file($files['tmp_name'][$i], $dest)) {
-                $this->model->addDokumentasi($notulensiId, $filename);
-            } else {
-                $errors[] = $files['name'][$i] . ' (gagal disimpan)';
-            }
-        }
-        return empty($errors) ? null : implode(', ', $errors);
-    }
-
-    // -------------------------------------------------------
-    // HELPER: Upload multiple dokumen pendukung
-    // -------------------------------------------------------
-    private function uploadDokumenMultiple($notulensiId, $inputName) {
-        if (empty($_FILES[$inputName]['name'][0])) return null;
-
-        $files = $_FILES[$inputName];
-        $errors = [];
-
-        for ($i = 0; $i < count($files['name']); $i++) {
-            if (empty($files['name'][$i])) continue;
-            if ($files['error'][$i] !== UPLOAD_ERR_OK) {
-                $errors[] = $files['name'][$i] . ' (error upload)';
-                continue;
-            }
-            if ($files['size'][$i] > self::MAX_FILE_SIZE) {
-                $errors[] = $files['name'][$i] . ' (ukuran melebihi 10MB)';
-                continue;
-            }
-            if (!in_array($files['type'][$i], self::ALLOWED_DOKUMEN)) {
-                $errors[] = $files['name'][$i] . ' (format tidak didukung)';
-                continue;
-            }
-            $ext          = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
-            $filename     = 'dukung_' . time() . '_' . $notulensiId . '_' . rand(1000, 9999) . '.' . $ext;
-            $originalName = $files['name'][$i];
-            $mimeType     = $files['type'][$i];
-            $dest         = BASE_PATH . self::DIR_DOKUMEN . $filename;
-            if (move_uploaded_file($files['tmp_name'][$i], $dest)) {
-                $this->model->addDokumen($notulensiId, $filename, $originalName, $mimeType);
-            } else {
-                $errors[] = $originalName . ' (gagal disimpan)';
-            }
-        }
-        return empty($errors) ? null : implode(', ', $errors);
-    }
-
-    // -------------------------------------------------------
-    // HELPER: Ikon file berdasarkan mime type
-    // -------------------------------------------------------
-    public static function fileIcon($mimeType) {
-        if (str_contains($mimeType, 'pdf'))         return 'fa-file-pdf';
-        if (str_contains($mimeType, 'word'))        return 'fa-file-word';
-        if (str_contains($mimeType, 'excel') || str_contains($mimeType, 'spreadsheet')) return 'fa-file-excel';
-        if (str_contains($mimeType, 'presentation') || str_contains($mimeType, 'powerpoint')) return 'fa-file-powerpoint';
-        return 'fa-file-alt';
     }
 }

@@ -1,231 +1,218 @@
 <?php
-class Notulensi {
-    private $db;
+require_once BASE_PATH . '/app/models/Model.php';
+require_once BASE_PATH . '/app/helpers/FileUploadHelper.php';
 
-    public function __construct() {
-        $this->db = getDB();
-    }
+class Notulensi extends Model
+{
+    protected string $table = 'notulensi_rapat';
 
-    public function getAll() {
-        $result = $this->db->query("
-            SELECT n.*, 
-                   u.acara as nama_undangan, 
-                   u.acara as tema_rapat,
-                   u.waktu as waktu_undangan,
-                   DATE(u.waktu) as tgl_rapat
-            FROM notulensi_rapat n
-            JOIN undangan_rapat u ON n.undangan_id = u.id
-            ORDER BY u.waktu DESC
-        ");
-        $rows = $result->fetch_all(MYSQLI_ASSOC);
+    private const DIR_FOTO    = '/public/uploads/dokumentasi/';
+    private const DIR_DOKUMEN = '/public/uploads/dokumen/';
 
-        // Ambil foto dokumentasi pertama untuk preview di listing
+    // ----------------------------------------------------------------
+    // Read — notulensi
+    // ----------------------------------------------------------------
+
+    public function getAll(): array
+    {
+        $rows = $this->fetchAll(
+            "SELECT n.*,
+                    u.acara  AS nama_undangan,
+                    u.acara  AS tema_rapat,
+                    u.waktu  AS waktu_undangan,
+                    DATE(u.waktu) AS tgl_rapat
+             FROM `{$this->table}` n
+             JOIN undangan_rapat u ON n.undangan_id = u.id
+             ORDER BY u.waktu DESC"
+        );
+
         foreach ($rows as &$row) {
-            $stmt = $this->db->prepare("SELECT filename FROM notulensi_dokumentasi WHERE notulensi_id = ? ORDER BY id ASC LIMIT 1");
-            $stmt->bind_param('i', $row['id']);
-            $stmt->execute();
-            $foto = $stmt->get_result()->fetch_assoc();
-            $row['dokumentasi_preview'] = $foto ? $foto['filename'] : null;
-            $row['dokumentasi_count'] = $this->countDokumentasi($row['id']);
+            $foto = $this->fetchOne(
+                "SELECT filename FROM notulensi_dokumentasi WHERE notulensi_id = ? ORDER BY id ASC LIMIT 1",
+                'i', $row['id']
+            );
+            $row['dokumentasi_preview'] = $foto['filename'] ?? null;
+            $row['dokumentasi_count']   = $this->countDokumentasi($row['id']);
         }
+
         return $rows;
     }
 
-    public function getById($id) {
-        $stmt = $this->db->prepare("
-            SELECT n.*, 
-                   u.acara as nama_undangan,
-                   u.acara as tema_rapat,
-                   u.waktu as waktu_undangan,
-                   DATE(u.waktu) as tgl_rapat,
-                   u.tempat
-            FROM notulensi_rapat n
-            JOIN undangan_rapat u ON n.undangan_id = u.id
-            WHERE n.id = ?
-        ");
-        $stmt->bind_param('i', $id);
-        $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
+    public function getById(int $id): ?array
+    {
+        $row = $this->fetchOne(
+            "SELECT n.*,
+                    u.acara  AS nama_undangan,
+                    u.acara  AS tema_rapat,
+                    u.waktu  AS waktu_undangan,
+                    DATE(u.waktu) AS tgl_rapat,
+                    u.tempat
+             FROM `{$this->table}` n
+             JOIN undangan_rapat u ON n.undangan_id = u.id
+             WHERE n.id = ?",
+            'i', $id
+        );
+
         if ($row) {
             $row['dokumentasi_list'] = $this->getDokumentasi($id);
             $row['dokumen_list']     = $this->getDokumen($id);
         }
+
         return $row;
     }
 
-    public function existsByUndanganId($undanganId) {
-        $stmt = $this->db->prepare("SELECT id FROM notulensi_rapat WHERE undangan_id = ? LIMIT 1");
-        $stmt->bind_param('i', $undanganId);
-        $stmt->execute();
-        return $stmt->get_result()->num_rows > 0;
+    public function existsByUndanganId(int $undanganId): bool
+    {
+        $row = $this->fetchOne(
+            "SELECT id FROM `{$this->table}` WHERE undangan_id = ? LIMIT 1",
+            'i', $undanganId
+        );
+        return $row !== null;
     }
 
-    public function create($data) {
-        $stmt = $this->db->prepare("
-            INSERT INTO notulensi_rapat (undangan_id, deskripsi_rapat, catatan, dibuat_oleh)
-            VALUES (?, ?, ?, ?)
-        ");
-        $stmt->bind_param('issi',
+    public function getByMonth(int $year, int $month): array
+    {
+        return $this->fetchAll(
+            "SELECT n.*,
+                    u.acara  AS nama_undangan,
+                    u.acara  AS tema_rapat,
+                    DATE(u.waktu) AS tgl_rapat
+             FROM `{$this->table}` n
+             JOIN undangan_rapat u ON n.undangan_id = u.id
+             WHERE YEAR(u.waktu) = ? AND MONTH(u.waktu) = ?
+             ORDER BY u.waktu ASC",
+            'ii', $year, $month
+        );
+    }
+
+    public function getByYear(int $year): array
+    {
+        return $this->fetchAll(
+            "SELECT n.*,
+                    u.acara  AS nama_undangan,
+                    u.acara  AS tema_rapat,
+                    DATE(u.waktu) AS tgl_rapat
+             FROM `{$this->table}` n
+             JOIN undangan_rapat u ON n.undangan_id = u.id
+             WHERE YEAR(u.waktu) = ?
+             ORDER BY u.waktu ASC",
+            'i', $year
+        );
+    }
+
+    // ----------------------------------------------------------------
+    // Write — notulensi
+    // ----------------------------------------------------------------
+
+    /**
+     * Simpan notulensi baru dan kembalikan ID baru, atau false jika gagal.
+     */
+    public function create(array $data): int|false
+    {
+        return $this->insertGetId(
+            "INSERT INTO `{$this->table}` (undangan_id, deskripsi_rapat, catatan, dibuat_oleh)
+             VALUES (?, ?, ?, ?)",
+            'issi',
             $data['undangan_id'],
             $data['deskripsi_rapat'],
             $data['catatan'],
             $data['dibuat_oleh']
         );
-        if (!$stmt->execute()) return false;
-        return $this->db->insert_id;
     }
 
-    public function update($id, $data) {
-        $stmt = $this->db->prepare("
-            UPDATE notulensi_rapat 
-            SET undangan_id=?, deskripsi_rapat=?, catatan=? 
-            WHERE id=?
-        ");
-        $stmt->bind_param('issi',
+    public function update(int $id, array $data): bool
+    {
+        return $this->execute(
+            "UPDATE `{$this->table}` SET undangan_id = ?, deskripsi_rapat = ?, catatan = ?
+             WHERE id = ?",
+            'issi',
             $data['undangan_id'],
             $data['deskripsi_rapat'],
             $data['catatan'],
             $id
+        ) >= 0; // affected_rows bisa 0 jika data tidak berubah
+    }
+
+    // ----------------------------------------------------------------
+    // Dokumentasi foto
+    // ----------------------------------------------------------------
+
+    public function getDokumentasi(int $notulensiId): array
+    {
+        return $this->fetchAll(
+            "SELECT * FROM notulensi_dokumentasi WHERE notulensi_id = ? ORDER BY id ASC",
+            'i', $notulensiId
         );
-        return $stmt->execute();
     }
 
-    public function delete($id) {
-        // File cleanup dilakukan di controller
-        $stmt = $this->db->prepare("DELETE FROM notulensi_rapat WHERE id=?");
-        $stmt->bind_param('i', $id);
-        return $stmt->execute();
+    public function countDokumentasi(int $notulensiId): int
+    {
+        $row = $this->fetchOne(
+            "SELECT COUNT(*) AS total FROM notulensi_dokumentasi WHERE notulensi_id = ?",
+            'i', $notulensiId
+        );
+        return (int) ($row['total'] ?? 0);
     }
 
-    public function count() {
-        $result = $this->db->query("SELECT COUNT(*) as total FROM notulensi_rapat");
-        return $result->fetch_assoc()['total'];
+    public function addDokumentasi(int $notulensiId, string $filename): bool
+    {
+        return $this->execute(
+            "INSERT INTO notulensi_dokumentasi (notulensi_id, filename) VALUES (?, ?)",
+            'is', $notulensiId, $filename
+        ) > 0;
     }
 
-    // -------------------------------------------------------
-    // DOKUMENTASI FOTO (multiple)
-    // -------------------------------------------------------
-
-    public function getDokumentasi($notulensiId) {
-        $stmt = $this->db->prepare("SELECT * FROM notulensi_dokumentasi WHERE notulensi_id = ? ORDER BY id ASC");
-        $stmt->bind_param('i', $notulensiId);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    }
-
-    public function countDokumentasi($notulensiId) {
-        $stmt = $this->db->prepare("SELECT COUNT(*) as total FROM notulensi_dokumentasi WHERE notulensi_id = ?");
-        $stmt->bind_param('i', $notulensiId);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_assoc()['total'];
-    }
-
-    public function addDokumentasi($notulensiId, $filename) {
-        $stmt = $this->db->prepare("INSERT INTO notulensi_dokumentasi (notulensi_id, filename) VALUES (?, ?)");
-        $stmt->bind_param('is', $notulensiId, $filename);
-        return $stmt->execute();
-    }
-
-    public function deleteDokumentasi($id) {
-        $stmt = $this->db->prepare("SELECT filename FROM notulensi_dokumentasi WHERE id = ?");
-        $stmt->bind_param('i', $id);
-        $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
+    public function deleteDokumentasi(int $id): bool
+    {
+        $row = $this->fetchOne("SELECT filename FROM notulensi_dokumentasi WHERE id = ?", 'i', $id);
         if ($row) {
-            $file = BASE_PATH . '/public/uploads/dokumentasi/' . $row['filename'];
-            if (file_exists($file)) unlink($file);
+            FileUploadHelper::deleteFile(BASE_PATH . self::DIR_FOTO . $row['filename']);
         }
-        $stmt2 = $this->db->prepare("DELETE FROM notulensi_dokumentasi WHERE id = ?");
-        $stmt2->bind_param('i', $id);
-        return $stmt2->execute();
+        return $this->execute("DELETE FROM notulensi_dokumentasi WHERE id = ?", 'i', $id) > 0;
     }
 
-    public function deleteAllDokumentasi($notulensiId) {
-        $list = $this->getDokumentasi($notulensiId);
-        foreach ($list as $d) {
-            $file = BASE_PATH . '/public/uploads/dokumentasi/' . $d['filename'];
-            if (file_exists($file)) unlink($file);
+    public function deleteAllDokumentasi(int $notulensiId): void
+    {
+        foreach ($this->getDokumentasi($notulensiId) as $d) {
+            FileUploadHelper::deleteFile(BASE_PATH . self::DIR_FOTO . $d['filename']);
         }
-        $stmt = $this->db->prepare("DELETE FROM notulensi_dokumentasi WHERE notulensi_id = ?");
-        $stmt->bind_param('i', $notulensiId);
-        return $stmt->execute();
+        $this->execute("DELETE FROM notulensi_dokumentasi WHERE notulensi_id = ?", 'i', $notulensiId);
     }
 
-    // -------------------------------------------------------
-    // DOKUMEN PENDUKUNG (multiple: PDF, DOCX, dll)
-    // -------------------------------------------------------
+    // ----------------------------------------------------------------
+    // Dokumen pendukung
+    // ----------------------------------------------------------------
 
-    public function getDokumen($notulensiId) {
-        $stmt = $this->db->prepare("SELECT * FROM notulensi_dokumen WHERE notulensi_id = ? ORDER BY id ASC");
-        $stmt->bind_param('i', $notulensiId);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    public function getDokumen(int $notulensiId): array
+    {
+        return $this->fetchAll(
+            "SELECT * FROM notulensi_dokumen WHERE notulensi_id = ? ORDER BY id ASC",
+            'i', $notulensiId
+        );
     }
 
-    public function addDokumen($notulensiId, $filename, $originalName, $mimeType) {
-        $stmt = $this->db->prepare("INSERT INTO notulensi_dokumen (notulensi_id, filename, original_name, mime_type) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param('isss', $notulensiId, $filename, $originalName, $mimeType);
-        return $stmt->execute();
+    public function addDokumen(int $notulensiId, string $filename, string $originalName, string $mimeType): bool
+    {
+        return $this->execute(
+            "INSERT INTO notulensi_dokumen (notulensi_id, filename, original_name, mime_type) VALUES (?, ?, ?, ?)",
+            'isss', $notulensiId, $filename, $originalName, $mimeType
+        ) > 0;
     }
 
-    public function deleteDokumen($id) {
-        $stmt = $this->db->prepare("SELECT filename FROM notulensi_dokumen WHERE id = ?");
-        $stmt->bind_param('i', $id);
-        $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
+    public function deleteDokumen(int $id): bool
+    {
+        $row = $this->fetchOne("SELECT filename FROM notulensi_dokumen WHERE id = ?", 'i', $id);
         if ($row) {
-            $file = BASE_PATH . '/public/uploads/dokumen/' . $row['filename'];
-            if (file_exists($file)) unlink($file);
+            FileUploadHelper::deleteFile(BASE_PATH . self::DIR_DOKUMEN . $row['filename']);
         }
-        $stmt2 = $this->db->prepare("DELETE FROM notulensi_dokumen WHERE id = ?");
-        $stmt2->bind_param('i', $id);
-        return $stmt2->execute();
+        return $this->execute("DELETE FROM notulensi_dokumen WHERE id = ?", 'i', $id) > 0;
     }
 
-    public function deleteAllDokumen($notulensiId) {
-        $list = $this->getDokumen($notulensiId);
-        foreach ($list as $d) {
-            $file = BASE_PATH . '/public/uploads/dokumen/' . $d['filename'];
-            if (file_exists($file)) unlink($file);
+    public function deleteAllDokumen(int $notulensiId): void
+    {
+        foreach ($this->getDokumen($notulensiId) as $d) {
+            FileUploadHelper::deleteFile(BASE_PATH . self::DIR_DOKUMEN . $d['filename']);
         }
-        $stmt = $this->db->prepare("DELETE FROM notulensi_dokumen WHERE notulensi_id = ?");
-        $stmt->bind_param('i', $notulensiId);
-        return $stmt->execute();
-    }
-
-    // -------------------------------------------------------
-    // LAPORAN
-    // -------------------------------------------------------
-
-    public function getByMonth($year, $month) {
-        $stmt = $this->db->prepare("
-            SELECT n.*, 
-                   u.acara as nama_undangan,
-                   u.acara as tema_rapat,
-                   DATE(u.waktu) as tgl_rapat
-            FROM notulensi_rapat n
-            JOIN undangan_rapat u ON n.undangan_id = u.id
-            WHERE YEAR(u.waktu)=? AND MONTH(u.waktu)=?
-            ORDER BY u.waktu ASC
-        ");
-        $stmt->bind_param('ii', $year, $month);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    }
-
-    public function getByYear($year) {
-        $stmt = $this->db->prepare("
-            SELECT n.*, 
-                   u.acara as nama_undangan,
-                   u.acara as tema_rapat,
-                   DATE(u.waktu) as tgl_rapat
-            FROM notulensi_rapat n
-            JOIN undangan_rapat u ON n.undangan_id = u.id
-            WHERE YEAR(u.waktu)=?
-            ORDER BY u.waktu ASC
-        ");
-        $stmt->bind_param('i', $year);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $this->execute("DELETE FROM notulensi_dokumen WHERE notulensi_id = ?", 'i', $notulensiId);
     }
 }
