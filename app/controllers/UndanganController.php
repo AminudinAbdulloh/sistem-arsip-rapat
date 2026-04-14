@@ -1,42 +1,41 @@
 <?php
 require_once BASE_PATH . '/app/controllers/Controller.php';
 require_once BASE_PATH . '/app/models/Undangan.php';
-require_once BASE_PATH . '/app/helpers/DateHelper.php';
 
-class UndanganController extends Controller
-{
-    private Undangan $model;
+class UndanganController extends Controller {
+    private $model;
 
-    public function __construct()
-    {
+    public function __construct() {
         $this->model = new Undangan();
     }
 
-    // ----------------------------------------------------------------
-    // CRUD
-    // ----------------------------------------------------------------
-
-    public function index(): void
-    {
+    public function index($param = null) {
         $this->requireLogin();
-        $this->renderMain('Undangan Rapat', 'undangan/index', [
-            'undangan' => $this->model->getAll(),
+        $undangan = $this->model->getAll();
+        $this->view('layouts/main', [
+            'title' => 'Undangan Rapat',
+            'content' => 'undangan/index',
+            'undangan' => $undangan,
         ]);
     }
 
-    public function create(): void
-    {
+    public function create($param = null) {
         $this->requireLogin();
         $error = '';
 
-        if ($this->isPost()) {
-            $data  = $this->buildFormData();
-            $error = $this->validateFormData($data);
-
-            if (!$error) {
-                $data['dibuat_oleh'] = $_SESSION['user_id'];
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = [
+                'waktu'       => $_POST['waktu'] ?? '',
+                'tempat'      => trim($_POST['tempat'] ?? ''),
+                'acara'       => trim($_POST['acara'] ?? ''),
+                'tgl_surat'   => $_POST['tgl_surat'] ?? date('Y-m-d'),
+                'dibuat_oleh' => $_SESSION['user_id'],
+            ];
+            if (empty($data['waktu']) || empty($data['tempat']) || empty($data['acara'])) {
+                $error = 'Semua field harus diisi.';
+            } else {
                 if ($this->model->create($data)) {
-                    $this->flashSuccess('Undangan rapat berhasil ditambahkan.');
+                    $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Undangan rapat berhasil ditambahkan.'];
                     $this->redirect('undangan');
                 } else {
                     $error = 'Gagal menyimpan data.';
@@ -44,25 +43,33 @@ class UndanganController extends Controller
             }
         }
 
-        $this->renderMain('Tambah Undangan Rapat', 'undangan/form', [
-            'error'    => $error,
+        $this->view('layouts/main', [
+            'title' => 'Tambah Undangan Rapat',
+            'content' => 'undangan/form',
+            'error' => $error,
             'undangan' => null,
         ]);
     }
 
-    public function edit(string $id): void
-    {
+    public function edit($id) {
         $this->requireLogin();
-        $undangan = $this->findOrRedirect((int) $id);
-        $error    = '';
+        $undangan = $this->model->getById($id);
+        if (!$undangan) { $this->redirect('undangan'); }
 
-        if ($this->isPost()) {
-            $data  = $this->buildFormData();
-            $error = $this->validateFormData($data);
+        $error = '';
 
-            if (!$error) {
-                if ($this->model->update((int) $id, $data)) {
-                    $this->flashSuccess('Undangan rapat berhasil diperbarui.');
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = [
+                'waktu'     => $_POST['waktu'] ?? '',
+                'tempat'    => trim($_POST['tempat'] ?? ''),
+                'acara'     => trim($_POST['acara'] ?? ''),
+                'tgl_surat' => $_POST['tgl_surat'] ?? date('Y-m-d'),
+            ];
+            if (empty($data['waktu']) || empty($data['tempat']) || empty($data['acara'])) {
+                $error = 'Semua field harus diisi.';
+            } else {
+                if ($this->model->update($id, $data)) {
+                    $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Undangan rapat berhasil diperbarui.'];
                     $this->redirect('undangan');
                 } else {
                     $error = 'Gagal memperbarui data.';
@@ -70,111 +77,101 @@ class UndanganController extends Controller
             }
         }
 
-        $this->renderMain('Edit Undangan Rapat', 'undangan/form', [
-            'error'    => $error,
+        $this->view('layouts/main', [
+            'title' => 'Edit Undangan Rapat',
+            'content' => 'undangan/form',
+            'error' => $error,
             'undangan' => $undangan,
         ]);
     }
 
-    public function delete(string $id): void
-    {
+    public function delete($id) {
         $this->requireLogin();
-        if ($this->isPost()) {
-            $this->model->delete((int) $id);
-            $this->flashSuccess('Undangan rapat berhasil dihapus.');
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->model->delete($id);
+            $_SESSION['flash'] = ['type' => 'success', 'msg' => 'Undangan rapat berhasil dihapus.'];
         }
         $this->redirect('undangan');
     }
 
-    // ----------------------------------------------------------------
-    // Generate dokumen undangan (.docx)
-    // ----------------------------------------------------------------
-
-    public function doc(string $id): void
-    {
+    public function doc($id) {
         $this->requireLogin();
-        $u = $this->findOrRedirect((int) $id);
+        $u = $this->model->getById($id);
+        if (!$u) { $this->redirect('undangan'); }
 
         $templatePath = BASE_PATH . '/public/templates/undangan_template.docx';
         if (!file_exists($templatePath)) {
-            http_response_code(404);
-            exit('Template undangan tidak ditemukan di: ' . $templatePath);
+            header('Content-Type: text/html; charset=utf-8');
+            echo 'Template undangan tidak ditemukan di: ' . $templatePath;
+            exit;
         }
 
-        $replacements = [
+        $waktu             = strtotime($u['waktu']);
+        $hariIndo          = $this->getHariIndonesia(date('N', $waktu));
+        $tglFormatted      = $hariIndo . ' / ' . $this->formatTanggalIndo(date('Y-m-d', $waktu));
+        $jamFormatted      = date('H.i', $waktu) . ' WIB - Selesai';
+        $tglSurat          = !empty($u['tgl_surat']) ? $u['tgl_surat'] : date('Y-m-d');
+        $tglSuratFormatted = $this->formatTanggalIndo($tglSurat);
+        $acara            = $u['acara'];
+
+        // acara digunakan sebagai perihal surat
+        $this->generateDocxFromTemplate($templatePath, [
             '{{PERIHAL}}'   => $u['acara'],
-            '{{HARI_TGL}}'  => DateHelper::tanggalSurat($u['waktu']),
-            '{{WAKTU}}'     => DateHelper::jamSelesai($u['waktu']),
+            '{{HARI_TGL}}'  => $tglFormatted,
+            '{{WAKTU}}'     => $jamFormatted,
             '{{TEMPAT}}'    => $u['tempat'],
-            '{{TGL_SURAT}}' => DateHelper::tanggal($u['tgl_surat']),
-        ];
-
-        $filename = 'Undangan ' . $u['acara'] . ' ' . DateHelper::tanggal($u['waktu']) . '.docx';
-        $this->generateDocx($templatePath, $replacements, $filename);
+            '{{TGL_SURAT}}' => $tglSuratFormatted,
+        ], 'Undangan ' . $acara . ' ' . $this->formatTanggalIndo(date('Y-m-d', $waktu)) . '.docx');
     }
 
-    // ----------------------------------------------------------------
-    // Private helpers
-    // ----------------------------------------------------------------
-
-    private function findOrRedirect(int $id): array
-    {
-        $undangan = $this->model->getById($id);
-        if (!$undangan) {
-            $this->redirect('undangan');
-        }
-        return $undangan;
-    }
-
-    private function buildFormData(): array
-    {
-        return [
-            'waktu'     => $this->input('waktu'),
-            'tempat'    => $this->trimInput('tempat'),
-            'acara'     => $this->trimInput('acara'),
-            'tgl_surat' => $this->input('tgl_surat', date('Y-m-d')),
-        ];
-    }
-
-    private function validateFormData(array $data): string
-    {
-        if (empty($data['waktu']) || empty($data['tempat']) || empty($data['acara'])) {
-            return 'Semua field harus diisi.';
-        }
-        return '';
-    }
-
-    private function generateDocx(string $templatePath, array $replacements, string $outputFilename): void
-    {
+    private function generateDocxFromTemplate($templatePath, $replacements, $filename) {
         $tmpFile = sys_get_temp_dir() . '/' . uniqid('undangan_') . '.docx';
         copy($templatePath, $tmpFile);
 
         $zip = new ZipArchive();
         if ($zip->open($tmpFile) !== true) {
-            exit('Gagal membuka template DOCX.');
+            header('Content-Type: text/html; charset=utf-8');
+            echo 'Gagal membuka template DOCX.';
+            exit;
         }
 
-        $xml = $zip->getFromName('word/document.xml');
-        if ($xml === false) {
+        $xmlContent = $zip->getFromName('word/document.xml');
+        if ($xmlContent === false) {
             $zip->close();
-            exit('Gagal membaca isi template.');
+            header('Content-Type: text/html; charset=utf-8');
+            echo 'Gagal membaca isi template.';
+            exit;
         }
 
         foreach ($replacements as $placeholder => $value) {
-            // Ganti versi ter-encode maupun mentah
-            $xml = str_replace(htmlspecialchars($placeholder), htmlspecialchars($value), $xml);
-            $xml = str_replace($placeholder, htmlspecialchars($value), $xml);
+            $xmlContent = str_replace(
+                htmlspecialchars($placeholder),
+                htmlspecialchars($value),
+                $xmlContent
+            );
+            $xmlContent = str_replace($placeholder, htmlspecialchars($value), $xmlContent);
         }
 
-        $zip->addFromString('word/document.xml', $xml);
+        $zip->addFromString('word/document.xml', $xmlContent);
         $zip->close();
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-        header('Content-Disposition: attachment; filename="' . $outputFilename . '"');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Content-Length: ' . filesize($tmpFile));
         header('Cache-Control: no-cache, must-revalidate');
         readfile($tmpFile);
         unlink($tmpFile);
         exit;
+    }
+
+    private function getHariIndonesia($dayNum) {
+        $hari = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+        return $hari[$dayNum] ?? '';
+    }
+
+    private function formatTanggalIndo($dateStr) {
+        $bulan = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        $ts = strtotime($dateStr);
+        return date('j', $ts) . ' ' . $bulan[(int)date('n', $ts)] . ' ' . date('Y', $ts);
     }
 }

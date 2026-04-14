@@ -1,17 +1,24 @@
 <?php
-require_once BASE_PATH . '/app/models/Model.php';
+class User {
+    private $db;
 
-class User extends Model
-{
-    protected string $table = 'users';
-
-    public function findByNip(string $nip): ?array
-    {
-        return $this->fetchOne("SELECT * FROM `{$this->table}` WHERE nip = ?", 's', $nip);
+    public function __construct() {
+        $this->db = getDB();
     }
 
-    public function findById(int $id): ?array
-    {
-        return $this->fetchOne("SELECT * FROM `{$this->table}` WHERE id = ?", 'i', $id);
+    public function findByNip($nip) {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE nip = ?");
+        $stmt->bind_param('s', $nip);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
+    }
+
+    public function findById($id) {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
     }
 }
