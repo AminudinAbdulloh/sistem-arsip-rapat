@@ -133,7 +133,7 @@ cp -r Sistem-Arsip-Rapat/ D:/xampp/htdocs/
 
 ```bash
 cd Sistem-Arsip-Rapat
-composer require vlucas/phpdotenv
+composer install
 ```
 
 **3. Buat database dan jalankan skema**
