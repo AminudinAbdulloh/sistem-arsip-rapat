@@ -47,6 +47,7 @@ class AuthController extends Controller
 
     private function startUserSession(array $user): void
     {
+        session_regenerate_id(true);
         $_SESSION['user_id']   = $user['id'];
         $_SESSION['user_nama'] = $user['nama'];
         $_SESSION['user_nip']  = $user['nip'];

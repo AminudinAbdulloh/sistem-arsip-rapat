@@ -80,7 +80,7 @@ $basePageUrl = $baseUrl . '/index.php?url=undangan';
               </a>
               <button onclick="confirmDelete(
                         '<?= $baseUrl ?>/index.php?url=undangan/delete/<?= $u['id'] ?>',
-                        'Hapus undangan rapat: <?= htmlspecialchars(addslashes($u['acara'])) ?>?')"
+                        'Hapus undangan rapat: <?= htmlspecialchars(addslashes($u['acara'])) ?>?\nJika undangan dihapus, maka notulensi juga akan terhapus.')"
                       class="btn btn-sm btn-danger" title="Hapus">
                 <i class="fas fa-trash"></i>
               </button>

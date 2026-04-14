@@ -82,7 +82,7 @@ class Controller
     protected function renderMain(string $title, string $content, array $data = []): void
     {
         $this->view('layouts/main', array_merge($data, [
-            'title'   => $title,
+            'title' => $title,
             'content' => $content,
         ]));
     }
@@ -104,5 +104,26 @@ class Controller
     protected function trimInput(string $key, mixed $default = ''): string
     {
         return trim($this->input($key, $default));
+    }
+
+    // ----------------------------------------------------------------
+    // RCSRF Token
+    // ----------------------------------------------------------------
+
+    protected function generateCsrfToken(): string
+    {
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['csrf_token'];
+    }
+
+    protected function verifyCsrfToken(): void
+    {
+        $token = $_POST['csrf_token'] ?? '';
+        if (!hash_equals($_SESSION['csrf_token'] ?? '', $token)) {
+            http_response_code(403);
+            die('CSRF token tidak valid.');
+        }
     }
 }

@@ -25,6 +25,7 @@
     <?php endif; ?>
 
     <form method="POST">
+      <input type="hidden" name="csrf_token" value="<?= $this->generateCsrfToken() ?>">
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">Waktu Rapat <span class="req">*</span></label>

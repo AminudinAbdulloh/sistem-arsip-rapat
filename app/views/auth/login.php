@@ -125,6 +125,7 @@
     <?php endif; ?>
 
     <form method="POST">
+      <input type="hidden" name="csrf_token" value="<?= $this->generateCsrfToken() ?>">
       <div class="form-group">
         <label>NIP</label>
         <div class="input-wrap">

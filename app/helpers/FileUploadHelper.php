@@ -147,7 +147,11 @@ class FileUploadHelper
         if ($files['size'][$i] > $maxSize) {
             return "{$name} (ukuran melebihi " . self::formatSize($maxSize) . ")";
         }
-        if (!in_array($files['type'][$i], $allowedMimes, true)) {
+
+        $finfo    = new finfo(FILEINFO_MIME_TYPE);
+        $realMime = $finfo->file($files['tmp_name'][$i]);
+        
+        if (!in_array($realMime, $allowedMimes, true)) {
             return "{$name} (format tidak didukung)";
         }
 

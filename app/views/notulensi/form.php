@@ -91,6 +91,7 @@ $baseUrl = BASE_URL;
     <?php endif; ?>
 
     <form method="POST" enctype="multipart/form-data" id="mainForm">
+      <input type="hidden" name="csrf_token" value="<?= $this->generateCsrfToken() ?>">
 
       <!-- Undangan -->
       <div class="form-group">
