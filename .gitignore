@@ -1,6 +1,5 @@
 public/uploads/dokumentasi/*
 public/uploads/dokumen/*
 
-composer.*
 vendor
 .env
