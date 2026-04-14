@@ -38,6 +38,7 @@ class UndanganController extends Controller
         $error = '';
 
         if ($this->isPost()) {
+            $this->verifyCsrfToken();
             $data  = $this->buildFormData();
             $error = $this->validateFormData($data);
 
@@ -65,6 +66,7 @@ class UndanganController extends Controller
         $error    = '';
 
         if ($this->isPost()) {
+            $this->verifyCsrfToken();
             $data  = $this->buildFormData();
             $error = $this->validateFormData($data);
 
@@ -88,6 +90,7 @@ class UndanganController extends Controller
     {
         $this->requireLogin();
         if ($this->isPost()) {
+            $this->verifyCsrfToken();
             $this->model->delete((int) $id);
             $this->flashSuccess('Undangan rapat berhasil dihapus.');
         }

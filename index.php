@@ -1,4 +1,12 @@
 <?php
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path'     => '/',
+    'secure'   => true,       // ganti false jika belum HTTPS
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
+
 session_start();
 
 require_once __DIR__ . '/config/database.php';

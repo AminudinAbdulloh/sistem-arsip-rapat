@@ -31,6 +31,20 @@ class FileUploadHelper
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     ];
 
+    private static array $ALLOWED_EXT = [
+        'image/jpeg'   => ['jpg', 'jpeg'],
+        'image/png'    => ['png'],
+        'image/gif'    => ['gif'],
+        'image/webp'   => ['webp'],
+        'application/pdf' => ['pdf'],
+        'application/msword' => ['doc'],
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => ['docx'],
+        'application/vnd.ms-excel' => ['xls'],
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => ['xlsx'],
+        'application/vnd.ms-powerpoint' => ['ppt'],
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation' => ['pptx'],
+    ];
+
     // ----------------------------------------------------------------
     // Public API
     // ----------------------------------------------------------------
@@ -150,9 +164,15 @@ class FileUploadHelper
 
         $finfo    = new finfo(FILEINFO_MIME_TYPE);
         $realMime = $finfo->file($files['tmp_name'][$i]);
-        
+
         if (!in_array($realMime, $allowedMimes, true)) {
             return "{$name} (format tidak didukung)";
+        }
+
+        $ext         = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
+        $allowedExts = self::$ALLOWED_EXT[$realMime] ?? [];
+        if (!empty($allowedExts) && !in_array($ext, $allowedExts, true)) {
+            return "{$name} (ekstensi tidak sesuai tipe file)";
         }
 
         return null;

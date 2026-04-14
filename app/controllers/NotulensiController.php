@@ -51,6 +51,7 @@ class NotulensiController extends Controller
         $error = '';
 
         if ($this->isPost()) {
+            $this->verifyCsrfToken();
             $undanganId = (int) $this->input('undangan_id', 0);
             $error      = $this->validateUndangan($undanganId, isNew: true);
 
@@ -81,6 +82,7 @@ class NotulensiController extends Controller
         $error        = '';
 
         if ($this->isPost()) {
+            $this->verifyCsrfToken();
             $undanganId = (int) $this->input('undangan_id', 0);
             $error      = $this->validateUndangan($undanganId, isNew: false, currentId: (int) $notulensi['undangan_id']);
 
@@ -107,6 +109,7 @@ class NotulensiController extends Controller
     {
         $this->requireLogin();
         if ($this->isPost()) {
+            $this->verifyCsrfToken();
             $intId = (int) $id;
             $this->model->deleteAllDokumentasi($intId);
             $this->model->deleteAllDokumen($intId);
@@ -132,6 +135,7 @@ class NotulensiController extends Controller
     {
         $this->requireLogin();
         if ($this->isPost()) {
+            $this->verifyCsrfToken();
             $this->model->deleteDokumentasi((int) $id);
         }
         $this->redirectToReferer();
@@ -141,6 +145,7 @@ class NotulensiController extends Controller
     {
         $this->requireLogin();
         if ($this->isPost()) {
+            $this->verifyCsrfToken();
             $this->model->deleteDokumen((int) $id);
         }
         $this->redirectToReferer();
@@ -244,7 +249,7 @@ class NotulensiController extends Controller
     private function redirectToReferer(): void
     {
         $referer = $_SERVER['HTTP_REFERER'] ?? null;
-        if ($referer) {
+        if ($referer && str_starts_with($referer, BASE_URL)) {
             header('Location: ' . $referer);
             exit;
         }

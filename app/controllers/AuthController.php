@@ -20,6 +20,7 @@ class AuthController extends Controller
         $error = '';
 
         if ($this->isPost()) {
+            $this->verifyCsrfToken();
             $nip      = $this->trimInput('nip');
             $password = $this->input('password');
             $user     = $this->userModel->findByNip($nip);
