@@ -25,8 +25,16 @@ class NotulensiController extends Controller
     public function index(): void
     {
         $this->requireLogin();
+
+        $page     = max(1, (int) ($_GET['page'] ?? 1));
+        $paginate = $this->model->getPaginated($page);
+
         $this->renderMain('Notulensi Rapat', 'notulensi/index', [
-            'notulensi' => $this->model->getAll(),
+            'notulensi'   => $paginate['data'],
+            'currentPage' => $paginate['page'],
+            'totalPages'  => $paginate['totalPages'],
+            'total'       => $paginate['total'],
+            'baseUrl'     => BASE_URL,
         ]);
     }
 
@@ -150,13 +158,11 @@ class NotulensiController extends Controller
             return 'Undangan rapat tidak ditemukan.';
         }
 
-        // Cek waktu — notulensi tidak bisa dibuat sebelum rapat dimulai
         if ($isNew && strtotime($undangan['waktu']) > time()) {
             return 'Notulensi tidak dapat dibuat sebelum rapat dimulai. Rapat dijadwalkan pada '
                 . date('d/m/Y H:i', strtotime($undangan['waktu'])) . '.';
         }
 
-        // Cek duplikasi (boleh jika undangan_id sama dengan milik notulensi saat ini)
         if ($undanganId !== $currentId && $this->model->existsByUndanganId($undanganId)) {
             return 'Undangan rapat yang dipilih sudah memiliki notulensi.';
         }
@@ -178,10 +184,6 @@ class NotulensiController extends Controller
     // Private helpers — upload
     // ----------------------------------------------------------------
 
-    /**
-     * Upload foto dokumentasi + dokumen pendukung sekaligus.
-     * Mengembalikan string error gabungan (kosong jika semua sukses).
-     */
     private function uploadAllFiles(int $notulensiId): string
     {
         $fotoErrors = FileUploadHelper::uploadMultiple(
@@ -207,7 +209,6 @@ class NotulensiController extends Controller
         return empty($all) ? '' : implode(', ', $all);
     }
 
-    /** Hapus file yang dicentang oleh user di form edit. */
     private function deleteCheckedFiles(int $notulensiId): void
     {
         foreach ($_POST['hapus_dokumentasi'] ?? [] as $fotoId) {

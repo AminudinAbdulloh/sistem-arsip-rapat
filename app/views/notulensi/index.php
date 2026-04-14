@@ -1,15 +1,14 @@
 <?php
-$formatterLengkap = new IntlDateFormatter(
-  'id_ID',
-  IntlDateFormatter::FULL,
-  IntlDateFormatter::NONE
-);
+$formatterLengkap = new IntlDateFormatter('id_ID', IntlDateFormatter::FULL, IntlDateFormatter::NONE);
+
+// Parameter untuk partial paginasi
+$basePageUrl = $baseUrl . '/index.php?url=notulensi';
 ?>
 
 <div class="page-header">
   <div class="breadcrumb">
     <i class="fas fa-home"></i>
-    <a href="<?= BASE_URL ?>/index.php?url=dashboard">Dashboard</a>
+    <a href="<?= $baseUrl ?>/index.php?url=dashboard">Dashboard</a>
     <i class="fas fa-chevron-right" style="font-size:10px"></i>
     Notulensi Rapat
   </div>
@@ -20,17 +19,18 @@ $formatterLengkap = new IntlDateFormatter(
 <div class="card">
   <div class="card-header">
     <h2>Daftar Notulensi Rapat</h2>
-    <a href="<?= BASE_URL ?>/index.php?url=notulensi/create" class="btn btn-primary">
+    <a href="<?= $baseUrl ?>/index.php?url=notulensi/create" class="btn btn-primary">
       <i class="fas fa-plus"></i> Tambah Notulensi
     </a>
   </div>
+
   <div class="table-wrap">
     <?php if (empty($notulensi)): ?>
       <div style="padding:40px;text-align:center;color:var(--muted)">
         <i class="fas fa-inbox" style="font-size:48px;opacity:.3;display:block;margin-bottom:12px"></i>
         Belum ada data notulensi rapat.
         <br><br>
-        <a href="<?= BASE_URL ?>/index.php?url=notulensi/create" class="btn btn-primary">
+        <a href="<?= $baseUrl ?>/index.php?url=notulensi/create" class="btn btn-primary">
           <i class="fas fa-plus"></i> Tambah Pertama
         </a>
       </div>
@@ -42,28 +42,36 @@ $formatterLengkap = new IntlDateFormatter(
           <th>Hari/Tanggal Rapat</th>
           <th>Tema Rapat</th>
           <th width="110">Foto</th>
-          <th width="150">Aksi</th>
+          <th width="130" style="white-space:nowrap">Aksi</th>
         </tr>
       </thead>
       <tbody>
-        <?php foreach ($notulensi as $i => $n): ?>
+        <?php
+        $perPage = 8;
+        $startNo = ($currentPage - 1) * $perPage + 1;
+        foreach ($notulensi as $i => $n):
+        ?>
         <tr>
-          <td><?= $i + 1 ?></td>
+          <td><?= $startNo + $i ?></td>
           <td>
             <?php
               $dateWaktu = new DateTime($n['tgl_rapat']);
-              $formatterLengkap->setPattern("EEEE / d MMMM y");
+              $formatterLengkap->setPattern('EEEE / d MMMM y');
               echo $formatterLengkap->format($dateWaktu);
             ?>
           </td>
           <td>
-            <strong><?= htmlspecialchars(strlen($n['tema_rapat']) > 50 ? substr($n['tema_rapat'], 0, 50).'…' : $n['tema_rapat']) ?></strong>
+            <strong>
+              <?= htmlspecialchars(mb_strlen($n['tema_rapat']) > 50
+                  ? mb_substr($n['tema_rapat'], 0, 50) . '…'
+                  : $n['tema_rapat']) ?>
+            </strong>
           </td>
           <td>
             <?php if ($n['dokumentasi_preview']): ?>
-              <a href="<?= BASE_URL ?>/index.php?url=notulensi/detail/<?= $n['id'] ?>"
+              <a href="<?= $baseUrl ?>/index.php?url=notulensi/detail/<?= $n['id'] ?>"
                  title="Lihat detail foto">
-                <img src="<?= BASE_URL ?>/public/uploads/dokumentasi/<?= htmlspecialchars($n['dokumentasi_preview']) ?>"
+                <img src="<?= $baseUrl ?>/public/uploads/dokumentasi/<?= htmlspecialchars($n['dokumentasi_preview']) ?>"
                      style="width:52px;height:40px;object-fit:cover;border-radius:5px;border:1px solid var(--border)"
                      alt="Foto">
               </a>
@@ -76,18 +84,19 @@ $formatterLengkap = new IntlDateFormatter(
               <span style="color:var(--muted);font-size:12px">—</span>
             <?php endif; ?>
           </td>
-          <td>
-            <div style="display:flex;gap:5px;flex-wrap:wrap">
-              <a href="<?= BASE_URL ?>/index.php?url=notulensi/detail/<?= $n['id'] ?>"
+          <td style="white-space:nowrap">
+            <div style="display:flex;gap:5px;align-items:center;flex-wrap:nowrap">
+              <a href="<?= $baseUrl ?>/index.php?url=notulensi/detail/<?= $n['id'] ?>"
                  class="btn btn-sm btn-primary" title="Detail">
                 <i class="fas fa-eye"></i>
               </a>
-              <a href="<?= BASE_URL ?>/index.php?url=notulensi/edit/<?= $n['id'] ?>"
+              <a href="<?= $baseUrl ?>/index.php?url=notulensi/edit/<?= $n['id'] ?>"
                  class="btn btn-sm btn-warning" title="Edit">
                 <i class="fas fa-edit"></i>
               </a>
-              <button onclick="confirmDelete('<?= BASE_URL ?>/index.php?url=notulensi/delete/<?= $n['id'] ?>',
-                      'Hapus notulensi: <?= htmlspecialchars(addslashes($n['tema_rapat'])) ?>?')"
+              <button onclick="confirmDelete(
+                          '<?= $baseUrl ?>/index.php?url=notulensi/delete/<?= $n['id'] ?>',
+                          'Hapus notulensi: <?= htmlspecialchars(addslashes($n['tema_rapat'])) ?>?')"
                       class="btn btn-sm btn-danger" title="Hapus">
                 <i class="fas fa-trash"></i>
               </button>
@@ -97,6 +106,10 @@ $formatterLengkap = new IntlDateFormatter(
         <?php endforeach; ?>
       </tbody>
     </table>
+
+    <!-- Paginasi -->
+    <?php include BASE_PATH . '/app/views/partials/_pagination.php'; ?>
+
     <?php endif; ?>
   </div>
 </div>

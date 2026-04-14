@@ -5,6 +5,8 @@ class Undangan extends Model
 {
     protected string $table = 'undangan_rapat';
 
+    public const PER_PAGE = 8;
+
     // ----------------------------------------------------------------
     // Read
     // ----------------------------------------------------------------
@@ -14,6 +16,26 @@ class Undangan extends Model
         return $this->fetchAll(
             "SELECT * FROM `{$this->table}` ORDER BY waktu DESC"
         );
+    }
+
+    /**
+     * Ambil data dengan paginasi.
+     *
+     * @return array{ data: array, total: int, totalPages: int, page: int }
+     */
+    public function getPaginated(int $page = 1, int $perPage = self::PER_PAGE): array
+    {
+        $total      = $this->count();
+        $totalPages = max(1, (int) ceil($total / $perPage));
+        $page       = max(1, min($page, $totalPages));
+        $offset     = ($page - 1) * $perPage;
+
+        $data = $this->fetchAll(
+            "SELECT * FROM `{$this->table}` ORDER BY waktu DESC LIMIT ? OFFSET ?",
+            'ii', $perPage, $offset
+        );
+
+        return compact('data', 'total', 'totalPages', 'page');
     }
 
     public function getById(int $id): ?array

@@ -6,6 +6,8 @@ class Notulensi extends Model
 {
     protected string $table = 'notulensi_rapat';
 
+    public const PER_PAGE = 8;
+
     private const DIR_FOTO    = '/public/uploads/dokumentasi/';
     private const DIR_DOKUMEN = '/public/uploads/dokumen/';
 
@@ -17,9 +19,9 @@ class Notulensi extends Model
     {
         $rows = $this->fetchAll(
             "SELECT n.*,
-                    u.acara  AS nama_undangan,
-                    u.acara  AS tema_rapat,
-                    u.waktu  AS waktu_undangan,
+                    u.acara       AS nama_undangan,
+                    u.acara       AS tema_rapat,
+                    u.waktu       AS waktu_undangan,
                     DATE(u.waktu) AS tgl_rapat
              FROM `{$this->table}` n
              JOIN undangan_rapat u ON n.undangan_id = u.id
@@ -27,24 +29,51 @@ class Notulensi extends Model
         );
 
         foreach ($rows as &$row) {
-            $foto = $this->fetchOne(
-                "SELECT filename FROM notulensi_dokumentasi WHERE notulensi_id = ? ORDER BY id ASC LIMIT 1",
-                'i', $row['id']
-            );
-            $row['dokumentasi_preview'] = $foto['filename'] ?? null;
-            $row['dokumentasi_count']   = $this->countDokumentasi($row['id']);
+            $this->attachPreview($row);
         }
 
         return $rows;
+    }
+
+    /**
+     * Ambil data dengan paginasi.
+     *
+     * @return array{ data: array, total: int, totalPages: int, page: int }
+     */
+    public function getPaginated(int $page = 1, int $perPage = self::PER_PAGE): array
+    {
+        $total      = $this->count();
+        $totalPages = max(1, (int) ceil($total / $perPage));
+        $page       = max(1, min($page, $totalPages));
+        $offset     = ($page - 1) * $perPage;
+
+        $rows = $this->fetchAll(
+            "SELECT n.*,
+                    u.acara       AS nama_undangan,
+                    u.acara       AS tema_rapat,
+                    u.waktu       AS waktu_undangan,
+                    DATE(u.waktu) AS tgl_rapat
+             FROM `{$this->table}` n
+             JOIN undangan_rapat u ON n.undangan_id = u.id
+             ORDER BY u.waktu DESC
+             LIMIT ? OFFSET ?",
+            'ii', $perPage, $offset
+        );
+
+        foreach ($rows as &$row) {
+            $this->attachPreview($row);
+        }
+
+        return ['data' => $rows, 'total' => $total, 'totalPages' => $totalPages, 'page' => $page];
     }
 
     public function getById(int $id): ?array
     {
         $row = $this->fetchOne(
             "SELECT n.*,
-                    u.acara  AS nama_undangan,
-                    u.acara  AS tema_rapat,
-                    u.waktu  AS waktu_undangan,
+                    u.acara       AS nama_undangan,
+                    u.acara       AS tema_rapat,
+                    u.waktu       AS waktu_undangan,
                     DATE(u.waktu) AS tgl_rapat,
                     u.tempat
              FROM `{$this->table}` n
@@ -63,19 +92,18 @@ class Notulensi extends Model
 
     public function existsByUndanganId(int $undanganId): bool
     {
-        $row = $this->fetchOne(
+        return $this->fetchOne(
             "SELECT id FROM `{$this->table}` WHERE undangan_id = ? LIMIT 1",
             'i', $undanganId
-        );
-        return $row !== null;
+        ) !== null;
     }
 
     public function getByMonth(int $year, int $month): array
     {
         return $this->fetchAll(
             "SELECT n.*,
-                    u.acara  AS nama_undangan,
-                    u.acara  AS tema_rapat,
+                    u.acara       AS nama_undangan,
+                    u.acara       AS tema_rapat,
                     DATE(u.waktu) AS tgl_rapat
              FROM `{$this->table}` n
              JOIN undangan_rapat u ON n.undangan_id = u.id
@@ -89,8 +117,8 @@ class Notulensi extends Model
     {
         return $this->fetchAll(
             "SELECT n.*,
-                    u.acara  AS nama_undangan,
-                    u.acara  AS tema_rapat,
+                    u.acara       AS nama_undangan,
+                    u.acara       AS tema_rapat,
                     DATE(u.waktu) AS tgl_rapat
              FROM `{$this->table}` n
              JOIN undangan_rapat u ON n.undangan_id = u.id
@@ -104,9 +132,7 @@ class Notulensi extends Model
     // Write — notulensi
     // ----------------------------------------------------------------
 
-    /**
-     * Simpan notulensi baru dan kembalikan ID baru, atau false jika gagal.
-     */
+    /** Simpan notulensi baru; kembalikan ID baru atau false. */
     public function create(array $data): int|false
     {
         return $this->insertGetId(
@@ -122,6 +148,7 @@ class Notulensi extends Model
 
     public function update(int $id, array $data): bool
     {
+        // affected_rows bisa 0 jika data tidak berubah — tetap dianggap sukses
         return $this->execute(
             "UPDATE `{$this->table}` SET undangan_id = ?, deskripsi_rapat = ?, catatan = ?
              WHERE id = ?",
@@ -130,7 +157,7 @@ class Notulensi extends Model
             $data['deskripsi_rapat'],
             $data['catatan'],
             $id
-        ) >= 0; // affected_rows bisa 0 jika data tidak berubah
+        ) >= 0;
     }
 
     // ----------------------------------------------------------------
@@ -214,5 +241,20 @@ class Notulensi extends Model
             FileUploadHelper::deleteFile(BASE_PATH . self::DIR_DOKUMEN . $d['filename']);
         }
         $this->execute("DELETE FROM notulensi_dokumen WHERE notulensi_id = ?", 'i', $notulensiId);
+    }
+
+    // ----------------------------------------------------------------
+    // Private helpers
+    // ----------------------------------------------------------------
+
+    /** Tambahkan data preview foto ke baris notulensi. */
+    private function attachPreview(array &$row): void
+    {
+        $foto = $this->fetchOne(
+            "SELECT filename FROM notulensi_dokumentasi WHERE notulensi_id = ? ORDER BY id ASC LIMIT 1",
+            'i', $row['id']
+        );
+        $row['dokumentasi_preview'] = $foto['filename'] ?? null;
+        $row['dokumentasi_count']   = $this->countDokumentasi($row['id']);
     }
 }

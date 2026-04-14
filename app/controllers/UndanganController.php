@@ -19,8 +19,16 @@ class UndanganController extends Controller
     public function index(): void
     {
         $this->requireLogin();
+
+        $page     = max(1, (int) ($_GET['page'] ?? 1));
+        $paginate = $this->model->getPaginated($page);
+
         $this->renderMain('Undangan Rapat', 'undangan/index', [
-            'undangan' => $this->model->getAll(),
+            'undangan'    => $paginate['data'],
+            'currentPage' => $paginate['page'],
+            'totalPages'  => $paginate['totalPages'],
+            'total'       => $paginate['total'],
+            'baseUrl'     => BASE_URL,
         ]);
     }
 
@@ -161,7 +169,6 @@ class UndanganController extends Controller
         }
 
         foreach ($replacements as $placeholder => $value) {
-            // Ganti versi ter-encode maupun mentah
             $xml = str_replace(htmlspecialchars($placeholder), htmlspecialchars($value), $xml);
             $xml = str_replace($placeholder, htmlspecialchars($value), $xml);
         }
