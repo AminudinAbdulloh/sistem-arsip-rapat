@@ -7,11 +7,11 @@ class User extends Model
 
     public function findByNip(string $nip): ?array
     {
-        return $this->fetchOne("SELECT * FROM `{$this->table}` WHERE nip = ?", 's', $nip);
+        return $this->fetchOne("SELECT * FROM `{$this->table}` WHERE nip = ?", [$nip]);
     }
 
     public function findById(int $id): ?array
     {
-        return $this->fetchOne("SELECT * FROM `{$this->table}` WHERE id = ?", 'i', $id);
+        return $this->fetchOne("SELECT * FROM `{$this->table}` WHERE id = ?", [$id]);
     }
 }

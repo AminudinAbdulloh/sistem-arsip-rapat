@@ -32,7 +32,7 @@ class Undangan extends Model
 
         $data = $this->fetchAll(
             "SELECT * FROM `{$this->table}` ORDER BY waktu DESC LIMIT ? OFFSET ?",
-            'ii', $perPage, $offset
+            [$perPage, $offset]
         );
 
         return compact('data', 'total', 'totalPages', 'page');
@@ -42,7 +42,7 @@ class Undangan extends Model
     {
         return $this->fetchOne(
             "SELECT * FROM `{$this->table}` WHERE id = ?",
-            'i', $id
+            [$id]
         );
     }
 
@@ -60,43 +60,51 @@ class Undangan extends Model
 
     public function getByMonth(int $year, int $month): array
     {
-        return $this->fetchAll(
-            "SELECT * FROM `{$this->table}`
-             WHERE YEAR(waktu) = ? AND MONTH(waktu) = ?
-             ORDER BY waktu ASC",
-            'ii', $year, $month
-        );
+        // YEAR()/MONTH() = MySQL; EXTRACT() = PostgreSQL (keduanya SQL standard)
+        $sql = $this->db->getDriver() === 'pgsql'
+            ? "SELECT * FROM `{$this->table}`
+               WHERE EXTRACT(YEAR FROM waktu) = ? AND EXTRACT(MONTH FROM waktu) = ?
+               ORDER BY waktu ASC"
+            : "SELECT * FROM `{$this->table}`
+               WHERE YEAR(waktu) = ? AND MONTH(waktu) = ?
+               ORDER BY waktu ASC";
+
+        return $this->fetchAll($sql, [$year, $month]);
     }
 
     public function getByYear(int $year): array
     {
-        return $this->fetchAll(
-            "SELECT * FROM `{$this->table}`
-             WHERE YEAR(waktu) = ?
-             ORDER BY waktu ASC",
-            'i', $year
-        );
+        $sql = $this->db->getDriver() === 'pgsql'
+            ? "SELECT * FROM `{$this->table}` WHERE EXTRACT(YEAR FROM waktu) = ? ORDER BY waktu ASC"
+            : "SELECT * FROM `{$this->table}` WHERE YEAR(waktu) = ? ORDER BY waktu ASC";
+
+        return $this->fetchAll($sql, [$year]);
     }
 
     public function getMonthlyStats(int $year): array
     {
-        return $this->fetchAll(
-            "SELECT MONTH(waktu) AS bulan, COUNT(*) AS total
-             FROM `{$this->table}`
-             WHERE YEAR(waktu) = ?
-             GROUP BY MONTH(waktu)
-             ORDER BY bulan",
-            'i', $year
-        );
+        $sql = $this->db->getDriver() === 'pgsql'
+            ? "SELECT EXTRACT(MONTH FROM waktu)::int AS bulan, COUNT(*) AS total
+               FROM `{$this->table}`
+               WHERE EXTRACT(YEAR FROM waktu) = ?
+               GROUP BY EXTRACT(MONTH FROM waktu)
+               ORDER BY bulan"
+            : "SELECT MONTH(waktu) AS bulan, COUNT(*) AS total
+               FROM `{$this->table}`
+               WHERE YEAR(waktu) = ?
+               GROUP BY MONTH(waktu)
+               ORDER BY bulan";
+
+        return $this->fetchAll($sql, [$year]);
     }
 
     public function getAvailableYears(): array
     {
-        return $this->fetchAll(
-            "SELECT DISTINCT YEAR(waktu) AS tahun
-             FROM `{$this->table}`
-             ORDER BY tahun DESC"
-        );
+        $sql = $this->db->getDriver() === 'pgsql'
+            ? "SELECT DISTINCT EXTRACT(YEAR FROM waktu)::int AS tahun FROM `{$this->table}` ORDER BY tahun DESC"
+            : "SELECT DISTINCT YEAR(waktu) AS tahun FROM `{$this->table}` ORDER BY tahun DESC";
+
+        return $this->fetchAll($sql);
     }
 
     // ----------------------------------------------------------------
@@ -109,12 +117,7 @@ class Undangan extends Model
         return $this->execute(
             "INSERT INTO `{$this->table}` (waktu, tempat, acara, tgl_surat, dibuat_oleh)
              VALUES (?, ?, ?, ?, ?)",
-            'ssssi',
-            $data['waktu'],
-            $data['tempat'],
-            $data['acara'],
-            $tglSurat,
-            $data['dibuat_oleh']
+            [$data['waktu'], $data['tempat'], $data['acara'], $tglSurat, $data['dibuat_oleh']]
         ) > 0;
     }
 
@@ -124,12 +127,7 @@ class Undangan extends Model
         return $this->execute(
             "UPDATE `{$this->table}` SET waktu = ?, tempat = ?, acara = ?, tgl_surat = ?
              WHERE id = ?",
-            'ssssi',
-            $data['waktu'],
-            $data['tempat'],
-            $data['acara'],
-            $tglSurat,
-            $id
+            [$data['waktu'], $data['tempat'], $data['acara'], $tglSurat, $id]
         ) > 0;
     }
 }

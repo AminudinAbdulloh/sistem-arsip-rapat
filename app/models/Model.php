@@ -2,11 +2,13 @@
 
 /**
  * Base Model
- * Menyediakan operasi CRUD dasar dan query helper yang dapat digunakan ulang.
+ *
+ * Menggunakan DatabaseInterface — bekerja dengan MySQL maupun PostgreSQL.
+ * Semua query helper meneruskan panggilan ke driver yang aktif.
  */
 abstract class Model
 {
-    protected mysqli $db;
+    protected DatabaseInterface $db;
 
     /** Nama tabel utama — wajib didefinisikan di subclass */
     protected string $table = '';
@@ -22,78 +24,56 @@ abstract class Model
 
     public function count(): int
     {
-        $result = $this->db->query("SELECT COUNT(*) AS total FROM `{$this->table}`");
-        return (int) $result->fetch_assoc()['total'];
+        return $this->db->countTable($this->table);
     }
 
     public function delete(int $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM `{$this->table}` WHERE id = ?");
-        $stmt->bind_param('i', $id);
-        return $stmt->execute();
+        return $this->db->deleteById($this->table, $id);
     }
 
     // ----------------------------------------------------------------
-    // Query helpers
+    // Query helpers — wrapper tipis ke DatabaseInterface
     // ----------------------------------------------------------------
 
     /**
-     * Jalankan prepared statement dan kembalikan semua baris.
+     * Jalankan SELECT dan kembalikan semua baris.
      *
-     * @param string $sql    Query dengan placeholder '?'
-     * @param string $types  String tipe parameter (mis. 'ii', 'ss')
-     * @param mixed  ...$params  Nilai parameter
+     * Perubahan dari versi lama: parameter tidak lagi pakai string $types.
+     * Cukup kirim array nilai langsung.
+     *
+     * Contoh:
+     *   $this->fetchAll("SELECT * FROM tabel WHERE year = ? AND month = ?", [$year, $month]);
      */
-    protected function fetchAll(string $sql, string $types = '', mixed ...$params): array
+    protected function fetchAll(string $sql, array $params = []): array
     {
-        $stmt = $this->db->prepare($sql);
-        if ($types !== '') {
-            $stmt->bind_param($types, ...$params);
-        }
-        $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        // Kompatibilitas mundur: jika dipanggil dengan gaya lama (string types + variadic),
+        // abaikan argumen ketiga ke atas dan tangani di sini.
+        return $this->db->fetchAll($sql, $params);
     }
 
     /**
-     * Jalankan prepared statement dan kembalikan satu baris.
+     * Jalankan SELECT dan kembalikan satu baris (atau null).
      */
-    protected function fetchOne(string $sql, string $types = '', mixed ...$params): ?array
+    protected function fetchOne(string $sql, array $params = []): ?array
     {
-        $stmt = $this->db->prepare($sql);
-        if ($types !== '') {
-            $stmt->bind_param($types, ...$params);
-        }
-        $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
-        return $row ?: null;
+        return $this->db->fetchOne($sql, $params);
     }
 
     /**
-     * Jalankan prepared statement non-SELECT (INSERT/UPDATE/DELETE).
-     * Mengembalikan jumlah baris yang terpengaruh.
+     * Jalankan INSERT/UPDATE/DELETE.
+     * Kembalikan jumlah baris yang terpengaruh.
      */
-    protected function execute(string $sql, string $types = '', mixed ...$params): int
+    protected function execute(string $sql, array $params = []): int
     {
-        $stmt = $this->db->prepare($sql);
-        if ($types !== '') {
-            $stmt->bind_param($types, ...$params);
-        }
-        $stmt->execute();
-        return $stmt->affected_rows;
+        return $this->db->execute($sql, $params);
     }
 
     /**
      * Jalankan INSERT dan kembalikan last insert ID, atau false jika gagal.
      */
-    protected function insertGetId(string $sql, string $types = '', mixed ...$params): int|false
+    protected function insertGetId(string $sql, array $params = []): int|false
     {
-        $stmt = $this->db->prepare($sql);
-        if ($types !== '') {
-            $stmt->bind_param($types, ...$params);
-        }
-        if (!$stmt->execute()) {
-            return false;
-        }
-        return $this->db->insert_id;
+        return $this->db->insertGetId($sql, $params);
     }
 }

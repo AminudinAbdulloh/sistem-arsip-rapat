@@ -57,7 +57,7 @@ class Notulensi extends Model
              JOIN undangan_rapat u ON n.undangan_id = u.id
              ORDER BY u.waktu DESC
              LIMIT ? OFFSET ?",
-            'ii', $perPage, $offset
+            [$perPage, $offset]
         );
 
         foreach ($rows as &$row) {
@@ -79,7 +79,7 @@ class Notulensi extends Model
              FROM `{$this->table}` n
              JOIN undangan_rapat u ON n.undangan_id = u.id
              WHERE n.id = ?",
-            'i', $id
+            [$id]
         );
 
         if ($row) {
@@ -94,12 +94,16 @@ class Notulensi extends Model
     {
         return $this->fetchOne(
             "SELECT id FROM `{$this->table}` WHERE undangan_id = ? LIMIT 1",
-            'i', $undanganId
+            [$undanganId]
         ) !== null;
     }
 
     public function getByMonth(int $year, int $month): array
     {
+        $whereClause = $this->db->getDriver() === 'pgsql'
+            ? "EXTRACT(YEAR FROM u.waktu) = ? AND EXTRACT(MONTH FROM u.waktu) = ?"
+            : "YEAR(u.waktu) = ? AND MONTH(u.waktu) = ?";
+
         return $this->fetchAll(
             "SELECT n.*,
                     u.acara       AS nama_undangan,
@@ -107,14 +111,18 @@ class Notulensi extends Model
                     DATE(u.waktu) AS tgl_rapat
              FROM `{$this->table}` n
              JOIN undangan_rapat u ON n.undangan_id = u.id
-             WHERE YEAR(u.waktu) = ? AND MONTH(u.waktu) = ?
+             WHERE {$whereClause}
              ORDER BY u.waktu ASC",
-            'ii', $year, $month
+            [$year, $month]
         );
     }
 
     public function getByYear(int $year): array
     {
+        $whereClause = $this->db->getDriver() === 'pgsql'
+            ? "EXTRACT(YEAR FROM u.waktu) = ?"
+            : "YEAR(u.waktu) = ?";
+
         return $this->fetchAll(
             "SELECT n.*,
                     u.acara       AS nama_undangan,
@@ -122,9 +130,9 @@ class Notulensi extends Model
                     DATE(u.waktu) AS tgl_rapat
              FROM `{$this->table}` n
              JOIN undangan_rapat u ON n.undangan_id = u.id
-             WHERE YEAR(u.waktu) = ?
+             WHERE {$whereClause}
              ORDER BY u.waktu ASC",
-            'i', $year
+            [$year]
         );
     }
 
@@ -138,25 +146,16 @@ class Notulensi extends Model
         return $this->insertGetId(
             "INSERT INTO `{$this->table}` (undangan_id, deskripsi_rapat, catatan, dibuat_oleh)
              VALUES (?, ?, ?, ?)",
-            'issi',
-            $data['undangan_id'],
-            $data['deskripsi_rapat'],
-            $data['catatan'],
-            $data['dibuat_oleh']
+            [$data['undangan_id'], $data['deskripsi_rapat'], $data['catatan'], $data['dibuat_oleh']]
         );
     }
 
     public function update(int $id, array $data): bool
     {
-        // affected_rows bisa 0 jika data tidak berubah — tetap dianggap sukses
         return $this->execute(
             "UPDATE `{$this->table}` SET undangan_id = ?, deskripsi_rapat = ?, catatan = ?
              WHERE id = ?",
-            'issi',
-            $data['undangan_id'],
-            $data['deskripsi_rapat'],
-            $data['catatan'],
-            $id
+            [$data['undangan_id'], $data['deskripsi_rapat'], $data['catatan'], $id]
         ) >= 0;
     }
 
@@ -168,7 +167,7 @@ class Notulensi extends Model
     {
         return $this->fetchAll(
             "SELECT * FROM notulensi_dokumentasi WHERE notulensi_id = ? ORDER BY id ASC",
-            'i', $notulensiId
+            [$notulensiId]
         );
     }
 
@@ -176,7 +175,7 @@ class Notulensi extends Model
     {
         $row = $this->fetchOne(
             "SELECT COUNT(*) AS total FROM notulensi_dokumentasi WHERE notulensi_id = ?",
-            'i', $notulensiId
+            [$notulensiId]
         );
         return (int) ($row['total'] ?? 0);
     }
@@ -185,17 +184,17 @@ class Notulensi extends Model
     {
         return $this->execute(
             "INSERT INTO notulensi_dokumentasi (notulensi_id, filename) VALUES (?, ?)",
-            'is', $notulensiId, $filename
+            [$notulensiId, $filename]
         ) > 0;
     }
 
     public function deleteDokumentasi(int $id): bool
     {
-        $row = $this->fetchOne("SELECT filename FROM notulensi_dokumentasi WHERE id = ?", 'i', $id);
+        $row = $this->fetchOne("SELECT filename FROM notulensi_dokumentasi WHERE id = ?", [$id]);
         if ($row) {
             FileUploadHelper::deleteFile(BASE_PATH . self::DIR_FOTO . $row['filename']);
         }
-        return $this->execute("DELETE FROM notulensi_dokumentasi WHERE id = ?", 'i', $id) > 0;
+        return $this->execute("DELETE FROM notulensi_dokumentasi WHERE id = ?", [$id]) > 0;
     }
 
     public function deleteAllDokumentasi(int $notulensiId): void
@@ -203,7 +202,7 @@ class Notulensi extends Model
         foreach ($this->getDokumentasi($notulensiId) as $d) {
             FileUploadHelper::deleteFile(BASE_PATH . self::DIR_FOTO . $d['filename']);
         }
-        $this->execute("DELETE FROM notulensi_dokumentasi WHERE notulensi_id = ?", 'i', $notulensiId);
+        $this->execute("DELETE FROM notulensi_dokumentasi WHERE notulensi_id = ?", [$notulensiId]);
     }
 
     // ----------------------------------------------------------------
@@ -214,7 +213,7 @@ class Notulensi extends Model
     {
         return $this->fetchAll(
             "SELECT * FROM notulensi_dokumen WHERE notulensi_id = ? ORDER BY id ASC",
-            'i', $notulensiId
+            [$notulensiId]
         );
     }
 
@@ -222,17 +221,17 @@ class Notulensi extends Model
     {
         return $this->execute(
             "INSERT INTO notulensi_dokumen (notulensi_id, filename, original_name, mime_type) VALUES (?, ?, ?, ?)",
-            'isss', $notulensiId, $filename, $originalName, $mimeType
+            [$notulensiId, $filename, $originalName, $mimeType]
         ) > 0;
     }
 
     public function deleteDokumen(int $id): bool
     {
-        $row = $this->fetchOne("SELECT filename FROM notulensi_dokumen WHERE id = ?", 'i', $id);
+        $row = $this->fetchOne("SELECT filename FROM notulensi_dokumen WHERE id = ?", [$id]);
         if ($row) {
             FileUploadHelper::deleteFile(BASE_PATH . self::DIR_DOKUMEN . $row['filename']);
         }
-        return $this->execute("DELETE FROM notulensi_dokumen WHERE id = ?", 'i', $id) > 0;
+        return $this->execute("DELETE FROM notulensi_dokumen WHERE id = ?", [$id]) > 0;
     }
 
     public function deleteAllDokumen(int $notulensiId): void
@@ -240,7 +239,7 @@ class Notulensi extends Model
         foreach ($this->getDokumen($notulensiId) as $d) {
             FileUploadHelper::deleteFile(BASE_PATH . self::DIR_DOKUMEN . $d['filename']);
         }
-        $this->execute("DELETE FROM notulensi_dokumen WHERE notulensi_id = ?", 'i', $notulensiId);
+        $this->execute("DELETE FROM notulensi_dokumen WHERE notulensi_id = ?", [$notulensiId]);
     }
 
     // ----------------------------------------------------------------
@@ -252,7 +251,7 @@ class Notulensi extends Model
     {
         $foto = $this->fetchOne(
             "SELECT filename FROM notulensi_dokumentasi WHERE notulensi_id = ? ORDER BY id ASC LIMIT 1",
-            'i', $row['id']
+            [$row['id']]
         );
         $row['dokumentasi_preview'] = $foto['filename'] ?? null;
         $row['dokumentasi_count']   = $this->countDokumentasi($row['id']);
