@@ -1,17 +1,22 @@
 {
     "functions": {
-      "index.php": {
+      "api/index.php": {
         "runtime": "vercel-php@0.7.1"
       }
     },
     "routes": [
+      {
+        "src": "/(config|app|vendor)/(.*)",
+        "status": 403,
+        "dest": "/api/index.php"
+      },
       {
         "src": "/public/(.*)",
         "dest": "/public/$1"
       },
       {
         "src": "/(.*)",
-        "dest": "/index.php?url=$1"
+        "dest": "/api/index.php?url=$1"
       }
     ]
   }
