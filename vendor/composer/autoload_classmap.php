@@ -6,5 +6,18 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'ArsipRapat\\App\\Router' => $baseDir . '/app/App/Router.php',
+    'ArsipRapat\\App\\View' => $baseDir . '/app/App/View.php',
+    'ArsipRapat\\Config\\Database' => $baseDir . '/config/Database.php',
+    'ArsipRapat\\Controller\\AuthController' => $baseDir . '/app/Controller/AuthController.php',
+    'ArsipRapat\\Controller\\DashboardController' => $baseDir . '/app/Controller/DashboardController.php',
+    'ArsipRapat\\Controller\\NotulensiController' => $baseDir . '/app/Controller/NotulensiController.php',
+    'ArsipRapat\\Controller\\UndanganController' => $baseDir . '/app/Controller/UndanganController.php',
+    'ArsipRapat\\Middleware\\AuthMiddleware' => $baseDir . '/app/Middleware/AuthMiddleware.php',
+    'ArsipRapat\\Middleware\\GuestMiddleware' => $baseDir . '/app/Middleware/GuestMiddleware.php',
+    'ArsipRapat\\Middleware\\Middleware' => $baseDir . '/app/Middleware/Middleware.php',
+    'ArsipRapat\\Model\\NotulensiRapat' => $baseDir . '/app/Model/NotulensiRapat.php',
+    'ArsipRapat\\Model\\UndanganRapat' => $baseDir . '/app/Model/UndanganRapat.php',
+    'ArsipRapat\\Model\\User' => $baseDir . '/app/Model/User.php',
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
 );

@@ -26,6 +26,19 @@ class ComposerStaticInitd056757a53b5681d504bd85742568bfd
     );
 
     public static $classMap = array (
+        'ArsipRapat\\App\\Router' => __DIR__ . '/../..' . '/app/App/Router.php',
+        'ArsipRapat\\App\\View' => __DIR__ . '/../..' . '/app/App/View.php',
+        'ArsipRapat\\Config\\Database' => __DIR__ . '/../..' . '/config/Database.php',
+        'ArsipRapat\\Controller\\AuthController' => __DIR__ . '/../..' . '/app/Controller/AuthController.php',
+        'ArsipRapat\\Controller\\DashboardController' => __DIR__ . '/../..' . '/app/Controller/DashboardController.php',
+        'ArsipRapat\\Controller\\NotulensiController' => __DIR__ . '/../..' . '/app/Controller/NotulensiController.php',
+        'ArsipRapat\\Controller\\UndanganController' => __DIR__ . '/../..' . '/app/Controller/UndanganController.php',
+        'ArsipRapat\\Middleware\\AuthMiddleware' => __DIR__ . '/../..' . '/app/Middleware/AuthMiddleware.php',
+        'ArsipRapat\\Middleware\\GuestMiddleware' => __DIR__ . '/../..' . '/app/Middleware/GuestMiddleware.php',
+        'ArsipRapat\\Middleware\\Middleware' => __DIR__ . '/../..' . '/app/Middleware/Middleware.php',
+        'ArsipRapat\\Model\\NotulensiRapat' => __DIR__ . '/../..' . '/app/Model/NotulensiRapat.php',
+        'ArsipRapat\\Model\\UndanganRapat' => __DIR__ . '/../..' . '/app/Model/UndanganRapat.php',
+        'ArsipRapat\\Model\\User' => __DIR__ . '/../..' . '/app/Model/User.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
     );
 

@@ -1,7 +1,3 @@
--- Database: arsip_rapat
-CREATE DATABASE IF NOT EXISTS arsip_rapat CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE arsip_rapat;
-
 -- Table: users
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
