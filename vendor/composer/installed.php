@@ -3,7 +3,7 @@
         'name' => 'itd-adisutjipto/arsip-rapat',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '195b6c5cd88faece5e822917a302da60f6b78203',
+        'reference' => '73e4959348f015c18bfe45ad164259ed92595c0f',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -31,7 +31,7 @@
         'itd-adisutjipto/arsip-rapat' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '195b6c5cd88faece5e822917a302da60f6b78203',
+            'reference' => '73e4959348f015c18bfe45ad164259ed92595c0f',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
