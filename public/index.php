@@ -1,45 +1,59 @@
 <?php
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+use CodeIgniter\Boot;
+use Config\Paths;
+
+/*
+ *---------------------------------------------------------------
+ * CHECK PHP VERSION
+ *---------------------------------------------------------------
+ */
+
+$minPhpVersion = '8.2'; // If you update this, don't forget to update `spark`.
+if (version_compare(PHP_VERSION, $minPhpVersion, '<')) {
+    $message = sprintf(
+        'Your PHP version must be %s or higher to run CodeIgniter. Current version: %s',
+        $minPhpVersion,
+        PHP_VERSION,
+    );
+
+    header('HTTP/1.1 503 Service Unavailable.', true, 503);
+    echo $message;
+
+    exit(1);
 }
 
-require_once __DIR__ . '/../vendor/autoload.php';
+/*
+ *---------------------------------------------------------------
+ * SET THE CURRENT DIRECTORY
+ *---------------------------------------------------------------
+ */
 
-use ArsipRapat\App\Router;
-use ArsipRapat\Controller\AuthController;
-use ArsipRapat\Controller\DashboardController;
-use ArsipRapat\Controller\UndanganController;
-use ArsipRapat\Controller\NotulensiController;
-use ArsipRapat\Middleware\AuthMiddleware;
-use ArsipRapat\Middleware\GuestMiddleware;
+// Path to the front controller (this file)
+define('FCPATH', __DIR__ . DIRECTORY_SEPARATOR);
 
-// Auth routes
-Router::add('GET', '/login', AuthController::class, 'loginPage', [GuestMiddleware::class]);
-Router::add('POST', '/login', AuthController::class, 'login');
-Router::add('GET', '/logout', AuthController::class, 'logout');
+// Ensure the current directory is pointing to the front controller's directory
+if (getcwd() . DIRECTORY_SEPARATOR !== FCPATH) {
+    chdir(FCPATH);
+}
 
-// Dashboard
-Router::add('GET', '/', DashboardController::class, 'index', [AuthMiddleware::class]);
-Router::add('GET', '/dashboard', DashboardController::class, 'index', [AuthMiddleware::class]);
-Router::add('GET', '/dashboard/download', DashboardController::class, 'downloadLaporan', [AuthMiddleware::class]);
+/*
+ *---------------------------------------------------------------
+ * BOOTSTRAP THE APPLICATION
+ *---------------------------------------------------------------
+ * This process sets up the path constants, loads and registers
+ * our autoloader, along with Composer's, loads our constants
+ * and fires up an environment-specific bootstrapping.
+ */
 
-// Undangan Rapat
-Router::add('GET', '/undangan', UndanganController::class, 'index', [AuthMiddleware::class]);
-Router::add('GET', '/undangan/create', UndanganController::class, 'create', [AuthMiddleware::class]);
-Router::add('POST', '/undangan/store', UndanganController::class, 'store', [AuthMiddleware::class]);
-Router::add('GET', '/undangan/([0-9]+)/edit', UndanganController::class, 'edit', [AuthMiddleware::class]);
-Router::add('POST', '/undangan/([0-9]+)/update', UndanganController::class, 'update', [AuthMiddleware::class]);
-Router::add('POST', '/undangan/([0-9]+)/delete', UndanganController::class, 'delete', [AuthMiddleware::class]);
-Router::add('GET', '/undangan/([0-9]+)/download', UndanganController::class, 'downloadPdf', [AuthMiddleware::class]);
+// LOAD OUR PATHS CONFIG FILE
+// This is the line that might need to be changed, depending on your folder structure.
+require FCPATH . '../app/Config/Paths.php';
+// ^^^ Change this line if you move your application folder
 
-// Notulensi Rapat
-Router::add('GET', '/notulensi', NotulensiController::class, 'index', [AuthMiddleware::class]);
-Router::add('GET', '/notulensi/create', NotulensiController::class, 'create', [AuthMiddleware::class]);
-Router::add('POST', '/notulensi/store', NotulensiController::class, 'store', [AuthMiddleware::class]);
-Router::add('GET', '/notulensi/([0-9]+)/show', NotulensiController::class, 'show', [AuthMiddleware::class]);
-Router::add('GET', '/notulensi/([0-9]+)/edit', NotulensiController::class, 'edit', [AuthMiddleware::class]);
-Router::add('POST', '/notulensi/([0-9]+)/update', NotulensiController::class, 'update', [AuthMiddleware::class]);
-Router::add('POST', '/notulensi/([0-9]+)/delete', NotulensiController::class, 'delete', [AuthMiddleware::class]);
+$paths = new Paths();
 
-Router::run();
+// LOAD THE FRAMEWORK BOOTSTRAP FILE
+require $paths->systemDirectory . '/Boot.php';
+
+exit(Boot::bootWeb($paths));

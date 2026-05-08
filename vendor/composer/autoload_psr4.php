@@ -6,6 +6,16 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    'ArsipRapat\\Config\\' => array($baseDir . '/config'),
-    'ArsipRapat\\' => array($baseDir . '/app'),
+    'Tests\\Support\\' => array($baseDir . '/tests/_support'),
+    'Psr\\Log\\' => array($vendorDir . '/psr/log/src'),
+    'Psr\\Container\\' => array($vendorDir . '/psr/container/src'),
+    'PhpParser\\' => array($vendorDir . '/nikic/php-parser/lib/PhpParser'),
+    'PhpOffice\\PhpWord\\' => array($vendorDir . '/phpoffice/phpword/src/PhpWord'),
+    'PhpOffice\\Math\\' => array($vendorDir . '/phpoffice/math/src/Math'),
+    'Laminas\\Escaper\\' => array($vendorDir . '/laminas/laminas-escaper/src'),
+    'Faker\\' => array($vendorDir . '/fakerphp/faker/src/Faker'),
+    'DeepCopy\\' => array($vendorDir . '/myclabs/deep-copy/src/DeepCopy'),
+    'Config\\' => array($baseDir . '/app/Config'),
+    'CodeIgniter\\' => array($vendorDir . '/codeigniter4/framework/system'),
+    'App\\' => array($baseDir . '/app'),
 );

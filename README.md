@@ -1,6 +1,6 @@
 # Sistem Informasi Pengelolaan Arsip Rapat ITD Adisutjipto
 
-Aplikasi web berbasis PHP MVC untuk mengelola dokumentasi rapat Program Studi ITD Adisutjipto.
+Aplikasi web berbasis **CodeIgniter 4** untuk mengelola dokumentasi rapat Program Studi ITD Adisutjipto.
 
 ## Fitur
 - **Login** menggunakan NIP dan kata sandi
@@ -9,53 +9,49 @@ Aplikasi web berbasis PHP MVC untuk mengelola dokumentasi rapat Program Studi IT
 - **Notulensi Rapat**: CRUD + upload foto dokumentasi + detail view
 - **Laporan**: Download laporan bulanan atau tahunan
 
-## Struktur Aplikasi (MVC)
+## Struktur Aplikasi (CodeIgniter 4)
 ```
 arsip-rapat/
 ├── app/
-│   ├── App/          # Router, View helper
-│   ├── Controller/   # AuthController, DashboardController, UndanganController, NotulensiController
-│   ├── Middleware/   # AuthMiddleware, GuestMiddleware
-│   ├── Model/        # User, UndanganRapat, NotulensiRapat
-│   └── View/         # Template PHP (Auth, Dashboard, Undangan, Notulensi, Layouts)
-├── config/
-│   ├── Database.php  # Koneksi PDO MySQL
-│   └── database.sql  # Schema & data awal
-├── public/
-│   ├── index.php     # Entry point
-│   └── .htaccess     # URL rewriting
-├── uploads/
-│   └── dokumentasi/  # Foto dokumentasi rapat
+│   ├── Config/       # Konfigurasi aplikasi (Routes, Database, Filters, etc)
+│   ├── Controllers/  # AuthController, DashboardController, UndanganController, NotulensiController
+│   ├── Database/
+│   │   ├── Migrations/  # Database migrations
+│   │   └── Seeds/       # Database seeders
+│   ├── Filters/      # AuthFilter, GuestFilter (middleware)
+│   ├── Models/       # UserModel, UndanganRapatModel, NotulensiRapatModel
+│   └── Views/        # Template PHP (Auth, Dashboard, Undangan, Notulensi, Layouts)
+├── public/           # DocumentRoot - index.php & .htaccess
+│   └── uploads/dokumentasi/  # Foto dokumentasi rapat
+├── vendor/           # Composer dependencies
+├── writable/         # CI4 writable folder (cache, logs, session, uploads)
 └── composer.json
 ```
 
 ## Instalasi
 
 ### 1. Persyaratan
-- PHP >= 8.0
+- PHP >= 8.2
 - MySQL / MariaDB
 - Apache (dengan mod_rewrite)
 - Composer
 
-### 2. Setup Database
-```sql
--- Jalankan file config/database.sql di MySQL Anda
-mysql -u root -p < config/database.sql
-```
-
-### 3. Konfigurasi Database
-Edit `config/Database.php`:
-```php
-$host = 'localhost';
-$dbname = 'arsip_rapat_itd';
-$username = 'root';  // sesuaikan
-$password = '';      // sesuaikan
-```
-
-### 4. Install Dependencies
+### 2. Install Dependencies
 ```bash
 composer install
 ```
+
+### 3. Setup Database
+```bash
+# Jalankan migration untuk membuat tabel
+php spark migrate
+
+# Jalankan seeder untuk data awal
+php spark db:seed UserSeeder
+```
+
+### 4. Konfigurasi Database (Opsional)
+Edit `app/Config/Database.php` jika perlu mengubah kredensial database.
 
 ### 5. Konfigurasi Web Server
 
@@ -70,14 +66,14 @@ DocumentRoot /path/to/arsip-rapat/public
 
 **Atau gunakan PHP Built-in Server (development):**
 ```bash
-cd public
-php -S localhost:8000
-# Akses: http://localhost:8000
+php spark serve
+# Akses: http://localhost:8080
 ```
 
-### 6. Permissions Upload Folder
+### 6. Permissions Writable Folder
 ```bash
-chmod 777 uploads/dokumentasi
+chmod -R 777 writable/
+chmod -R 777 public/uploads/
 ```
 
 ## Akun Default
@@ -86,18 +82,40 @@ chmod 777 uploads/dokumentasi
 | 198001012005011001 | password | Kepala Program Studi |
 | 198502152010012002 | password | Sekretaris Prodi |
 
-> **Catatan**: Hash password default di database menggunakan `password_hash('password', PASSWORD_BCRYPT)`
-> Untuk generate hash baru: `php -r "echo password_hash('passwordbaru', PASSWORD_BCRYPT);"`
-
 ## Teknologi
-- **Backend**: PHP 8+ (OOP, MVC pattern)
-- **Database**: MySQL dengan PDO
-- **Frontend**: HTML5, CSS3 (custom design), Chart.js
+- **Backend**: CodeIgniter 4 (PHP 8.2+)
+- **Database**: MySQL dengan Query Builder & Migrations
+- **Frontend**: HTML5, Tailwind CSS, Chart.js
 - **Icons**: Font Awesome 6
-- **URL Routing**: Apache mod_rewrite + custom Router
+- **Routing**: CI4 Routing dengan Filters
+
+## Command Line (Spark)
+```bash
+# Jalankan development server
+php spark serve
+
+# Jalankan migration
+php spark migrate
+
+# Jalankan seeder
+php spark db:seed UserSeeder
+
+# Buat controller baru
+php spark make:controller NamaController
+
+# Buat model baru
+php spark make:model NamaModel
+```
 
 ## Aturan Bisnis
 - Notulensi **hanya dapat dibuat** jika sudah ada undangan rapat
 - Undangan **tidak dapat dihapus** jika sudah memiliki notulensi terkait
 - Download undangan menghasilkan surat undangan resmi dalam format HTML (print-ready)
 - Laporan bulanan/tahunan dapat diunduh dan dicetak
+
+## Perubahan dari Versi Sebelumnya
+- **Framework**: Custom PHP → CodeIgniter 4
+- **Database**: PDO Manual → CI4 Query Builder & Migrations
+- **Routing**: Custom Router → CI4 Routes dengan Filters
+- **Views**: Plain PHP → CI4 Views dengan Layouts
+- **Session**: PHP Native → CI4 Session Library
