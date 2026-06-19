@@ -16,8 +16,6 @@
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tgl Rapat</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tema</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Undangan</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dibuat Oleh</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
@@ -26,7 +24,7 @@
             <tbody class="divide-y divide-gray-200">
                 <?php if (empty($notulensi)): ?>
                     <tr>
-                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                        <td colspan="4" class="px-6 py-8 text-center text-gray-500">
                             <i class="fas fa-inbox text-4xl mb-2"></i>
                             <p>Belum ada notulensi rapat</p>
                         </td>
@@ -35,8 +33,6 @@
                     <?php foreach ($notulensi as $i => $n): ?>
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 text-sm text-gray-900"><?= $i + 1 ?></td>
-                            <td class="px-6 py-4 text-sm text-gray-900"><?= date('d/m/Y', strtotime($n['tgl_rapat'])) ?></td>
-                            <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate"><?= esc($n['tema_rapat']) ?></td>
                             <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate"><?= esc($n['nama_undangan']) ?></td>
                             <td class="px-6 py-4 text-sm text-gray-900"><?= esc($n['created_by_nama']) ?></td>
                             <td class="px-6 py-4 text-sm">

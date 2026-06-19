@@ -12,7 +12,7 @@ class NotulensiRapatModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['undangan_id', 'tgl_rapat', 'tema_rapat', 'deskripsi_rapat', 'catatan', 'dokumentasi', 'created_by'];
+    protected $allowedFields    = ['undangan_id', 'deskripsi_rapat', 'catatan', 'dokumentasi', 'created_by'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;

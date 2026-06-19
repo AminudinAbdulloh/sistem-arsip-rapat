@@ -17,18 +17,6 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Rapat <span class="text-red-500">*</span></label>
-                <input type="date" name="tgl_rapat" required
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#1e3a5f] outline-none">
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Tema Rapat <span class="text-red-500">*</span></label>
-                <input type="text" name="tema_rapat" required placeholder="Masukkan tema rapat"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#1e3a5f] outline-none">
-            </div>
-
-            <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi Rapat <span class="text-red-500">*</span></label>
                 <textarea name="deskripsi_rapat" required rows="4" placeholder="Masukkan deskripsi/isi rapat"
                     class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#1e3a5f] outline-none"></textarea>
@@ -46,7 +34,6 @@
                     <i class="fas fa-camera mr-1"></i>Dokumentasi (Foto)
                 </label>
 
-                <!-- Area Pilih File -->
                 <label for="fotoInput"
                     class="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-6 cursor-pointer hover:border-[#1e3a5f] hover:bg-blue-50 transition-all duration-200"
                     id="dropLabel">
@@ -54,13 +41,11 @@
                     <p class="text-sm text-gray-500">Klik untuk pilih foto</p>
                     <p class="text-xs text-gray-400 mt-1">JPG, PNG, GIF, WEBP &bull; Bisa pilih lebih dari 1</p>
                 </label>
-                <!-- Input file yang VISIBLE agar file benar-benar terkirim -->
                 <input type="file" id="fotoInput" name="dokumentasi[]"
                     accept="image/*" multiple
                     class="hidden"
                     onchange="showPreviews(this)">
 
-                <!-- Preview Grid -->
                 <div id="previewGrid" class="grid grid-cols-3 gap-3 mt-3"></div>
                 <p id="fotoCount" class="text-xs text-gray-500 mt-2 hidden"></p>
             </div>
@@ -79,30 +64,19 @@
 
 <style>
     #dropLabel.has-files { border-color: #1e3a5f; background-color: #eff6ff; }
-    .preview-item {
-        position: relative;
-        aspect-ratio: 1;
-        border-radius: 0.5rem;
-        overflow: hidden;
-        background: #f3f4f6;
-    }
+    .preview-item { position: relative; aspect-ratio: 1; border-radius: 0.5rem; overflow: hidden; background: #f3f4f6; }
     .preview-item img { width: 100%; height: 100%; object-fit: cover; }
-    .preview-item .badge {
-        position: absolute; bottom: 4px; right: 4px;
-        background: rgba(0,0,0,0.5); color: #fff;
-        font-size: 10px; border-radius: 4px; padding: 1px 5px;
-    }
+    .preview-item .badge { position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.5); color: #fff; font-size: 10px; border-radius: 4px; padding: 1px 5px; }
 </style>
 
 <script>
 function showPreviews(input) {
-    const grid     = document.getElementById('previewGrid');
-    const countEl  = document.getElementById('fotoCount');
-    const label    = document.getElementById('dropLabel');
-    const files    = input.files;
+    var grid    = document.getElementById('previewGrid');
+    var countEl = document.getElementById('fotoCount');
+    var label   = document.getElementById('dropLabel');
+    var files   = input.files;
 
     grid.innerHTML = '';
-
     if (!files || files.length === 0) {
         label.classList.remove('has-files');
         countEl.classList.add('hidden');
@@ -118,9 +92,8 @@ function showPreviews(input) {
         reader.onload = function(e) {
             var item = document.createElement('div');
             item.className = 'preview-item';
-            item.innerHTML =
-                '<img src="' + e.target.result + '" alt="' + file.name + '">' +
-                '<span class="badge">' + (i + 1) + '/' + files.length + '</span>';
+            item.innerHTML = '<img src="' + e.target.result + '" alt="' + file.name + '">' +
+                             '<span class="badge">' + (i + 1) + '/' + files.length + '</span>';
             grid.appendChild(item);
         };
         reader.readAsDataURL(file);

@@ -24,20 +24,9 @@
         ?>
 
         <div class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <p class="text-sm text-gray-500">Tanggal Rapat</p>
-                    <p class="font-medium"><?= date('d F Y', strtotime($notulensi['tgl_rapat'])) ?></p>
-                </div>
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <p class="text-sm text-gray-500">Undangan Terkait</p>
-                    <p class="font-medium"><?= esc($notulensi['nama_undangan']) ?></p>
-                </div>
-            </div>
-
             <div class="bg-gray-50 rounded-lg p-4">
-                <p class="text-sm text-gray-500">Tema Rapat</p>
-                <p class="font-medium text-lg"><?= esc($notulensi['tema_rapat']) ?></p>
+                <p class="text-sm text-gray-500">Undangan Terkait</p>
+                <p class="font-medium"><?= esc($notulensi['nama_undangan']) ?></p>
             </div>
 
             <div class="bg-gray-50 rounded-lg p-4">

@@ -6,15 +6,12 @@
         <h3 class="text-lg font-semibold text-gray-800 mb-6">Edit Notulensi Rapat</h3>
 
         <?php
-        // Decode dokumentasi (backward-compatible)
         $existingFotos = [];
         if (!empty($notulensi['dokumentasi'])) {
             $decoded = json_decode($notulensi['dokumentasi'], true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                $existingFotos = $decoded;
-            } else {
-                $existingFotos = [$notulensi['dokumentasi']];
-            }
+            $existingFotos = (json_last_error() === JSON_ERROR_NONE && is_array($decoded))
+                ? $decoded
+                : [$notulensi['dokumentasi']];
         }
         ?>
 
@@ -28,18 +25,6 @@
                         </option>
                     <?php endforeach; ?>
                 </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Rapat <span class="text-red-500">*</span></label>
-                <input type="date" name="tgl_rapat" required value="<?= $notulensi['tgl_rapat'] ?>"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#1e3a5f] outline-none">
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Tema Rapat <span class="text-red-500">*</span></label>
-                <input type="text" name="tema_rapat" required value="<?= esc($notulensi['tema_rapat']) ?>"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#1e3a5f] outline-none">
             </div>
 
             <div>
@@ -60,7 +45,6 @@
                     <i class="fas fa-camera mr-1"></i>Dokumentasi (Foto)
                 </label>
 
-                <!-- Foto yang sudah ada -->
                 <?php if (!empty($existingFotos)): ?>
                     <p class="text-xs text-gray-500 mb-2">
                         Foto saat ini &mdash; centang <span class="text-red-500 font-semibold">Hapus</span> untuk menghapus:
@@ -85,7 +69,6 @@
                     </div>
                 <?php endif; ?>
 
-                <!-- Tambah Foto Baru -->
                 <p class="text-xs text-gray-500 mb-1">Tambah foto baru:</p>
                 <label for="fotoInput"
                     class="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-5 cursor-pointer hover:border-[#1e3a5f] hover:bg-blue-50 transition-all duration-200"
@@ -99,7 +82,6 @@
                     class="hidden"
                     onchange="showNewPreviews(this)">
 
-                <!-- Preview foto baru -->
                 <div id="newPreviewGrid" class="grid grid-cols-3 gap-3 mt-3"></div>
                 <p id="fotoCount" class="text-xs text-gray-500 mt-2 hidden"></p>
             </div>
@@ -119,28 +101,16 @@
 <style>
     #dropLabel.has-files { border-color: #1e3a5f; background-color: #eff6ff; }
     .existing-item.marked-delete { border-color: #ef4444; opacity: 0.5; }
-    .new-preview-item {
-        position: relative;
-        aspect-ratio: 1;
-        border-radius: 0.5rem;
-        overflow: hidden;
-        background: #f3f4f6;
-    }
+    .new-preview-item { position: relative; aspect-ratio: 1; border-radius: 0.5rem; overflow: hidden; background: #f3f4f6; }
     .new-preview-item img { width: 100%; height: 100%; object-fit: cover; }
-    .new-preview-item .badge {
-        position: absolute; bottom: 4px; right: 4px;
-        background: rgba(0,0,0,0.5); color: #fff;
-        font-size: 10px; border-radius: 4px; padding: 1px 5px;
-    }
+    .new-preview-item .badge { position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.5); color: #fff; font-size: 10px; border-radius: 4px; padding: 1px 5px; }
 </style>
 
 <script>
 function toggleMarkDelete(nama) {
     var cb   = document.getElementById('del-' + nama);
     var wrap = document.getElementById('wrap-' + nama);
-    if (cb && wrap) {
-        wrap.classList.toggle('marked-delete', cb.checked);
-    }
+    if (cb && wrap) wrap.classList.toggle('marked-delete', cb.checked);
 }
 
 function showNewPreviews(input) {
@@ -150,7 +120,6 @@ function showNewPreviews(input) {
     var files   = input.files;
 
     grid.innerHTML = '';
-
     if (!files || files.length === 0) {
         label.classList.remove('has-files');
         countEl.classList.add('hidden');
@@ -166,9 +135,8 @@ function showNewPreviews(input) {
         reader.onload = function(e) {
             var item = document.createElement('div');
             item.className = 'new-preview-item';
-            item.innerHTML =
-                '<img src="' + e.target.result + '" alt="' + file.name + '">' +
-                '<span class="badge">' + (i + 1) + '</span>';
+            item.innerHTML = '<img src="' + e.target.result + '" alt="' + file.name + '">' +
+                             '<span class="badge">' + (i + 1) + '</span>';
             grid.appendChild(item);
         };
         reader.readAsDataURL(file);
