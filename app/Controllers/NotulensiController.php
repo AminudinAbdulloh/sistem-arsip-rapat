@@ -20,7 +20,7 @@ class NotulensiController extends BaseController
     {
         $notulensi = $this->model->findAllWithRelations();
         return view('Notulensi/index', [
-            'title' => 'Notulensi Rapat - Arsip ITD',
+            'title'     => 'Notulensi Rapat - Arsip ITD',
             'notulensi' => $notulensi,
         ]);
     }
@@ -44,7 +44,7 @@ class NotulensiController extends BaseController
         }
 
         return view('Notulensi/create', [
-            'title' => 'Tambah Notulensi Rapat',
+            'title'    => 'Tambah Notulensi Rapat',
             'undangan' => $undangan,
         ]);
     }
@@ -52,10 +52,10 @@ class NotulensiController extends BaseController
     public function store(): \CodeIgniter\HTTP\RedirectResponse
     {
         $undanganId = (int)($this->request->getPost('undangan_id') ?? 0);
-        $tglRapat = $this->request->getPost('tgl_rapat') ?? '';
-        $temaRapat = trim($this->request->getPost('tema_rapat') ?? '');
-        $deskripsi = trim($this->request->getPost('deskripsi_rapat') ?? '');
-        $catatan = trim($this->request->getPost('catatan') ?? '');
+        $tglRapat   = $this->request->getPost('tgl_rapat') ?? '';
+        $temaRapat  = trim($this->request->getPost('tema_rapat') ?? '');
+        $deskripsi  = trim($this->request->getPost('deskripsi_rapat') ?? '');
+        $catatan    = trim($this->request->getPost('catatan') ?? '');
 
         if (!$undanganId || empty($tglRapat) || empty($temaRapat) || empty($deskripsi)) {
             return redirect()->to('/notulensi/create')->with('error', 'Field yang wajib diisi belum lengkap.');
@@ -73,24 +73,52 @@ class NotulensiController extends BaseController
             return redirect()->to('/notulensi/create')->with('error', 'Undangan rapat ini sudah memiliki notulensi. Silakan pilih undangan lain.');
         }
 
-        // Handle upload dokumentasi
-        $dokumentasi = null;
-        $file = $this->request->getFile('dokumentasi');
-        if ($file && $file->isValid() && !$file->hasMoved()) {
-            $dokumentasi = $this->uploadFoto($file);
-            if (!$dokumentasi) {
-                return redirect()->to('/notulensi/create')->with('error', 'Gagal mengunggah foto dokumentasi. Format harus JPG, PNG, GIF, atau WEBP.');
+        // Handle upload multiple dokumentasi
+        // Gunakan getFileMultiple() karena input name="dokumentasi[]"
+        $dokumentasiJson = null;
+        $uploadedFiles   = [];
+        $fileList        = $this->request->getFileMultiple('dokumentasi') ?? [];
+
+        // --- DEBUG LOG (hapus setelah masalah terselesaikan) ---
+        log_message('debug', '[UPLOAD] Jumlah file diterima: ' . count($fileList));
+        foreach ($fileList as $idx => $file) {
+            if ($file) {
+                log_message('debug', '[UPLOAD] File[' . $idx . ']: name=' . $file->getName()
+                    . ' | valid=' . ($file->isValid() ? 'true' : 'false')
+                    . ' | moved=' . ($file->hasMoved() ? 'true' : 'false')
+                    . ' | error=' . $file->getError()
+                    . ' | mime=' . $file->getMimeType()
+                    . ' | size=' . $file->getSize());
+            } else {
+                log_message('debug', '[UPLOAD] File[' . $idx . ']: NULL');
+            }
+        }
+        // --- END DEBUG LOG ---
+
+        foreach ($fileList as $file) {
+            if ($file && $file->isValid() && !$file->hasMoved()) {
+                $filename = $this->uploadFoto($file);
+                if ($filename) {
+                    $uploadedFiles[] = $filename;
+                } else {
+                    log_message('debug', '[UPLOAD] uploadFoto() mengembalikan null untuk: ' . $file->getName());
+                }
             }
         }
 
+        if (!empty($uploadedFiles)) {
+            $dokumentasiJson = json_encode($uploadedFiles);
+        }
+        log_message('debug', '[UPLOAD] JSON yang disimpan: ' . ($dokumentasiJson ?? 'NULL'));
+
         $this->model->insert([
-            'undangan_id' => $undanganId,
-            'tgl_rapat' => $tglRapat,
-            'tema_rapat' => $temaRapat,
+            'undangan_id'    => $undanganId,
+            'tgl_rapat'      => $tglRapat,
+            'tema_rapat'     => $temaRapat,
             'deskripsi_rapat' => $deskripsi,
-            'catatan' => $catatan,
-            'dokumentasi' => $dokumentasi,
-            'created_by' => session()->get('user')['id']
+            'catatan'        => $catatan,
+            'dokumentasi'    => $dokumentasiJson,
+            'created_by'     => session()->get('user')['id'],
         ]);
 
         return redirect()->to('/notulensi')->with('success', 'Notulensi rapat berhasil ditambahkan.');
@@ -105,9 +133,9 @@ class NotulensiController extends BaseController
 
         $undangan = $this->undanganModel->findAll();
         return view('Notulensi/edit', [
-            'title' => 'Edit Notulensi Rapat',
+            'title'     => 'Edit Notulensi Rapat',
             'notulensi' => $notulensi,
-            'undangan' => $undangan,
+            'undangan'  => $undangan,
         ]);
     }
 
@@ -119,36 +147,51 @@ class NotulensiController extends BaseController
         }
 
         $undanganId = (int)($this->request->getPost('undangan_id') ?? 0);
-        $tglRapat = $this->request->getPost('tgl_rapat') ?? '';
-        $temaRapat = trim($this->request->getPost('tema_rapat') ?? '');
-        $deskripsi = trim($this->request->getPost('deskripsi_rapat') ?? '');
-        $catatan = trim($this->request->getPost('catatan') ?? '');
+        $tglRapat   = $this->request->getPost('tgl_rapat') ?? '';
+        $temaRapat  = trim($this->request->getPost('tema_rapat') ?? '');
+        $deskripsi  = trim($this->request->getPost('deskripsi_rapat') ?? '');
+        $catatan    = trim($this->request->getPost('catatan') ?? '');
 
         if (!$undanganId || empty($tglRapat) || empty($temaRapat) || empty($deskripsi)) {
             return redirect()->to('/notulensi/' . $id . '/edit')->with('error', 'Field yang wajib diisi belum lengkap.');
         }
 
-        // Handle upload dokumentasi baru
-        $dokumentasi = $notulensi['dokumentasi'];
-        $file = $this->request->getFile('dokumentasi');
-        if ($file && $file->isValid() && !$file->hasMoved()) {
-            $newDok = $this->uploadFoto($file);
-            if ($newDok) {
-                // Hapus foto lama
-                if ($dokumentasi && file_exists(FCPATH . 'uploads/dokumentasi/' . $dokumentasi)) {
-                    unlink(FCPATH . 'uploads/dokumentasi/' . $dokumentasi);
+        // Decode foto yang sudah ada
+        $existingFotos = $this->decodeFotos($notulensi['dokumentasi']);
+
+        // Hapus foto yang diminta dihapus oleh user
+        $deleteFotos = $this->request->getPost('hapus_foto') ?? [];
+        if (!empty($deleteFotos)) {
+            foreach ($deleteFotos as $namaFile) {
+                $path = FCPATH . 'uploads/dokumentasi/' . $namaFile;
+                if (file_exists($path)) {
+                    unlink($path);
                 }
-                $dokumentasi = $newDok;
+                $existingFotos = array_values(array_filter($existingFotos, fn($f) => $f !== $namaFile));
             }
         }
 
+        // Upload foto-foto baru dan gabungkan
+        // Gunakan getFileMultiple() karena input name="dokumentasi[]"
+        $newFiles = $this->request->getFileMultiple('dokumentasi') ?? [];
+        foreach ($newFiles as $file) {
+            if ($file && $file->isValid() && !$file->hasMoved()) {
+                $filename = $this->uploadFoto($file);
+                if ($filename) {
+                    $existingFotos[] = $filename;
+                }
+            }
+        }
+
+        $dokumentasiJson = !empty($existingFotos) ? json_encode(array_values($existingFotos)) : null;
+
         $this->model->update($id, [
-            'undangan_id' => $undanganId,
-            'tgl_rapat' => $tglRapat,
-            'tema_rapat' => $temaRapat,
+            'undangan_id'    => $undanganId,
+            'tgl_rapat'      => $tglRapat,
+            'tema_rapat'     => $temaRapat,
             'deskripsi_rapat' => $deskripsi,
-            'catatan' => $catatan,
-            'dokumentasi' => $dokumentasi,
+            'catatan'        => $catatan,
+            'dokumentasi'    => $dokumentasiJson,
         ]);
 
         return redirect()->to('/notulensi')->with('success', 'Notulensi rapat berhasil diperbarui.');
@@ -158,9 +201,12 @@ class NotulensiController extends BaseController
     {
         $notulensi = $this->model->find($id);
         if ($notulensi && $notulensi['dokumentasi']) {
-            $fotoPath = FCPATH . 'uploads/dokumentasi/' . $notulensi['dokumentasi'];
-            if (file_exists($fotoPath)) {
-                unlink($fotoPath);
+            $fotos = $this->decodeFotos($notulensi['dokumentasi']);
+            foreach ($fotos as $namaFile) {
+                $path = FCPATH . 'uploads/dokumentasi/' . $namaFile;
+                if (file_exists($path)) {
+                    unlink($path);
+                }
             }
         }
 
@@ -176,11 +222,18 @@ class NotulensiController extends BaseController
         }
 
         return view('Notulensi/show', [
-            'title' => 'Detail Notulensi Rapat',
+            'title'     => 'Detail Notulensi Rapat',
             'notulensi' => $notulensi,
         ]);
     }
 
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Upload satu file foto dan kembalikan nama file-nya.
+     */
     private function uploadFoto($file): ?string
     {
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -188,7 +241,7 @@ class NotulensiController extends BaseController
             return null;
         }
 
-        $ext = $file->getExtension();
+        $ext      = $file->getExtension();
         $filename = uniqid('dok_') . '.' . $ext;
         $uploadPath = FCPATH . 'uploads/dokumentasi/';
 
@@ -197,5 +250,24 @@ class NotulensiController extends BaseController
         }
 
         return null;
+    }
+
+    /**
+     * Decode kolom dokumentasi ke array nama file.
+     * Backward-compatible: mendukung string lama (satu nama file) maupun JSON array.
+     */
+    private function decodeFotos(?string $dokumentasi): array
+    {
+        if (empty($dokumentasi)) {
+            return [];
+        }
+
+        $decoded = json_decode($dokumentasi, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
+
+        // Backward-compatible: nilai lama berupa nama file tunggal
+        return [$dokumentasi];
     }
 }

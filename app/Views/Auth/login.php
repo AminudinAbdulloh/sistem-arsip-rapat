@@ -38,7 +38,7 @@
 
         <form action="/login" method="POST" class="space-y-5">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">NIP</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
                 <div class="relative">
                     <span class="absolute left-3 top-3 text-gray-400">
                         <i class="fas fa-id-card"></i>
@@ -67,11 +67,11 @@
             </button>
         </form>
 
-        <div class="mt-6 text-center">
+        <!-- <div class="mt-6 text-center">
             <p class="text-xs text-gray-400">
                 Default: NIP <code class="bg-gray-100 px-1 rounded">198001012005011001</code> | Password: <code class="bg-gray-100 px-1 rounded">password</code>
             </p>
-        </div>
+        </div> -->
     </div>
 </body>
 </html>
