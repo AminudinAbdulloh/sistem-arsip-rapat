@@ -164,37 +164,42 @@ class NotulensiRapatModel extends Model
                     ->first();
     }
 
+    // Tanggal rapat = undangan_rapat.waktu. Kolom notulensi_rapat.tgl_rapat tidak lagi
+    // diisi form notulensi (selalu NULL pada data baru), sehingga tidak dipakai di sini.
+
     public function countByMonth(int $month, int $year): int
     {
-        return $this->where('MONTH(tgl_rapat)', $month)
-                    ->where('YEAR(tgl_rapat)', $year)
+        return $this->join('undangan_rapat', 'undangan_rapat.id = notulensi_rapat.undangan_id')
+                    ->where('MONTH(undangan_rapat.waktu)', $month)
+                    ->where('YEAR(undangan_rapat.waktu)', $year)
                     ->countAllResults();
     }
 
     public function countByYear(int $year): int
     {
-        return $this->where('YEAR(tgl_rapat)', $year)
+        return $this->join('undangan_rapat', 'undangan_rapat.id = notulensi_rapat.undangan_id')
+                    ->where('YEAR(undangan_rapat.waktu)', $year)
                     ->countAllResults();
     }
 
     public function findByMonth(int $month, int $year): array
     {
-        return $this->select('notulensi_rapat.*, undangan_rapat.acara as nama_undangan, undangan_rapat.tempat, users.nama as created_by_nama')
+        return $this->select('notulensi_rapat.*, undangan_rapat.acara as nama_undangan, undangan_rapat.tempat, undangan_rapat.waktu as waktu_undangan, users.nama as created_by_nama')
                     ->join('undangan_rapat', 'undangan_rapat.id = notulensi_rapat.undangan_id')
                     ->join('users', 'users.id = notulensi_rapat.created_by')
-                    ->where('MONTH(notulensi_rapat.tgl_rapat)', $month)
-                    ->where('YEAR(notulensi_rapat.tgl_rapat)', $year)
-                    ->orderBy('notulensi_rapat.tgl_rapat', 'ASC')
+                    ->where('MONTH(undangan_rapat.waktu)', $month)
+                    ->where('YEAR(undangan_rapat.waktu)', $year)
+                    ->orderBy('undangan_rapat.waktu', 'ASC')
                     ->findAll();
     }
 
     public function findByYear(int $year): array
     {
-        return $this->select('notulensi_rapat.*, undangan_rapat.acara as nama_undangan, undangan_rapat.tempat, users.nama as created_by_nama')
+        return $this->select('notulensi_rapat.*, undangan_rapat.acara as nama_undangan, undangan_rapat.tempat, undangan_rapat.waktu as waktu_undangan, users.nama as created_by_nama')
                     ->join('undangan_rapat', 'undangan_rapat.id = notulensi_rapat.undangan_id')
                     ->join('users', 'users.id = notulensi_rapat.created_by')
-                    ->where('YEAR(notulensi_rapat.tgl_rapat)', $year)
-                    ->orderBy('notulensi_rapat.tgl_rapat', 'ASC')
+                    ->where('YEAR(undangan_rapat.waktu)', $year)
+                    ->orderBy('undangan_rapat.waktu', 'ASC')
                     ->findAll();
     }
 }

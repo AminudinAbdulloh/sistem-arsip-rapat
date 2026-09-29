@@ -319,8 +319,8 @@ Dibuat oleh migration [`CreateArsipRapatTables`](app/Database/Migrations/2026-05
 |---|---|---|
 | id | INT UNSIGNED, PK, AUTO_INCREMENT | |
 | undangan_id | INT UNSIGNED, **UNIQUE**, FK → `undangan_rapat.id` (CASCADE) | Relasi 1:1 — satu undangan maksimal satu notulensi |
-| tgl_rapat | DATE | |
-| tema_rapat | VARCHAR(255) | |
+| tgl_rapat | DATE, NULL | **Tidak dipakai lagi** (form tidak mengisinya; NULL pada data baru). Tanggal rapat = `undangan_rapat.waktu`, dipakai oleh dashboard, grafik, laporan, dan arsip |
+| tema_rapat | VARCHAR(255), NULL | **Tidak dipakai lagi**; judul rapat = `undangan_rapat.acara` |
 | deskripsi_rapat | TEXT | |
 | catatan | TEXT, NULL | |
 | dokumentasi | VARCHAR(255), NULL | Nama file, disimpan fisik di `public/uploads/dokumentasi/` |

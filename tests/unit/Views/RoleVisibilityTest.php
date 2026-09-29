@@ -102,9 +102,10 @@ final class RoleVisibilityTest extends CIUnitTestCase
         $this->db->table('undangan_rapat')->insert([
             'hari' => 'Senin', 'waktu' => '2026-10-05 09:00:00', 'tempat' => 'R', 'acara' => 'Rapat Laporan', 'created_by' => $userId,
         ]);
+        // tgl_rapat sengaja tidak diisi, seperti notulensi yang dibuat lewat form sekarang
         $this->db->table('notulensi_rapat')->insert([
             'undangan_id' => (int) $this->db->insertID(), 'deskripsi_rapat' => 'D', 'created_by' => $userId,
-            'tgl_rapat' => '2026-10-05', 'status_verifikasi' => 'terverifikasi',
+            'status_verifikasi' => 'terverifikasi',
         ]);
 
         $body = $this->page('kaprodi', '/dashboard/download?type=tahunan&tahun=2026');
@@ -112,6 +113,53 @@ final class RoleVisibilityTest extends CIUnitTestCase
         $this->assertStringContainsString('<th>Status</th>', $body);
         $this->assertStringContainsString('Terverifikasi', $body);
         $this->assertStringContainsString('Notulensi Terverifikasi', $body);
+    }
+
+    private function buatNotulensiTanpaTglRapat(): void
+    {
+        $this->db->table('users')->insert(['nip' => '1', 'nama' => 'S', 'kata_sandi' => 'x', 'role' => 'sekretaris']);
+        $userId = (int) $this->db->insertID();
+        $this->db->table('undangan_rapat')->insert([
+            'hari' => 'Senin', 'waktu' => '2026-10-05 09:00:00', 'tempat' => 'Ruang Laporan',
+            'acara' => 'Rapat Anggaran', 'created_by' => $userId,
+        ]);
+        $this->db->table('notulensi_rapat')->insert([
+            'undangan_id' => (int) $this->db->insertID(), 'deskripsi_rapat' => 'Isi notulensi anggaran', 'created_by' => $userId,
+        ]);
+    }
+
+    public function testLaporanMemuatNotulensiBerdasarkanTanggalUndanganBukanTglRapat(): void
+    {
+        $this->buatNotulensiTanpaTglRapat();
+
+        foreach (['/dashboard/download?type=tahunan&tahun=2026', '/dashboard/download?type=bulanan&bulan=10&tahun=2026'] as $uri) {
+            $body = $this->page('kaprodi', $uri);
+
+            $this->assertStringContainsString('Isi notulensi anggaran', $body, $uri);
+            $this->assertStringContainsString('05/10/2026', $body, $uri);
+            $this->assertStringNotContainsString('01/01/1970', $body, $uri);
+            $this->assertStringNotContainsString('<th>Tema</th>', $body, $uri);
+        }
+    }
+
+    public function testLaporanBulanLainTidakMemuatNotulensiTersebut(): void
+    {
+        $this->buatNotulensiTanpaTglRapat();
+
+        $body = $this->page('kaprodi', '/dashboard/download?type=bulanan&bulan=11&tahun=2026');
+
+        $this->assertStringNotContainsString('Isi notulensi anggaran', $body);
+    }
+
+    public function testKartuDanGrafikDashboardMenghitungNotulensiBaru(): void
+    {
+        $this->buatNotulensiTanpaTglRapat();
+
+        $body = $this->page('kaprodi', '/dashboard?bulan=10&tahun=2026');
+
+        $this->assertMatchesRegularExpression('/Notulensi Bulan Ini<\/p>\s*<p[^>]*>1<\/p>/', $body);
+        $this->assertMatchesRegularExpression('/Total Notulensi Tahun 2026<\/p>\s*<p[^>]*>1<\/p>/', $body);
+        $this->assertStringContainsString('{"bulan":"Okt","undangan":1,"notulensi":1}', $body);
     }
 
     public function testDosenTidakMelihatGrafikDashboard(): void

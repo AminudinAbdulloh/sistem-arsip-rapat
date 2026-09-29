@@ -104,7 +104,7 @@ class DashboardController extends BaseController
         $notulensiRows = '';
         $terverifikasi = 0;
         foreach ($notulensi as $i => $n) {
-            $tgl = date('d/m/Y', strtotime($n['tgl_rapat']));
+            $tgl = date('d/m/Y', strtotime($n['waktu_undangan']));
             $status = $n['status_verifikasi'] ?? 'menunggu';
             $statusLabel = NotulensiRapatModel::STATUS_LABELS[$status] ?? $status;
             if ($status === 'terverifikasi') {
@@ -113,7 +113,6 @@ class DashboardController extends BaseController
             $notulensiRows .= "<tr>
                 <td>" . ($i+1) . "</td>
                 <td>{$tgl}</td>
-                <td>{$n['tema_rapat']}</td>
                 <td>{$n['nama_undangan']}</td>
                 <td>{$n['deskripsi_rapat']}</td>
                 <td>{$statusLabel}</td>
@@ -174,7 +173,7 @@ class DashboardController extends BaseController
 
 <div class='section-title'>DAFTAR NOTULENSI RAPAT</div>
 <table>
-  <thead><tr><th>No</th><th>Tgl Rapat</th><th>Tema</th><th>Undangan Terkait</th><th>Deskripsi</th><th>Status</th></tr></thead>
+  <thead><tr><th>No</th><th>Tgl Rapat</th><th>Undangan Terkait</th><th>Deskripsi</th><th>Status</th></tr></thead>
   <tbody>{$notulensiRows}</tbody>
 </table>
 
