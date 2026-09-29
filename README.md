@@ -11,6 +11,7 @@ Aplikasi web berbasis **CodeIgniter 4** untuk mengelola arsip rapat (undangan & 
 - [Instalasi dan Menjalankan di Lokal](#instalasi-dan-menjalankan-di-lokal)
 - [Konfigurasi Environment](#konfigurasi-environment)
 - [Akun Default](#akun-default)
+- [Peran dan Hak Akses](#peran-dan-hak-akses)
 - [Skema Database](#skema-database)
 - [Daftar Endpoint (Routing)](#daftar-endpoint-routing)
 - [Alur dan Aturan Bisnis](#alur-dan-aturan-bisnis)
@@ -23,6 +24,8 @@ Aplikasi web berbasis **CodeIgniter 4** untuk mengelola arsip rapat (undangan & 
 ## Fitur Utama
 
 - **Login** menggunakan NIP dan kata sandi (session-based, tanpa registrasi mandiri).
+- **Hak akses berbasis peran** (Admin, Ketua Program Studi, Sekretaris/Staff, Dosen) — lihat [Peran dan Hak Akses](#peran-dan-hak-akses).
+- **Manajemen pengguna** (khusus Admin): tambah, ubah, hapus pengguna, ganti role dan kata sandi.
 - **Dashboard** dengan rekap jumlah undangan & notulensi per bulan/tahun serta grafik interaktif (Chart.js).
 - **Undangan Rapat**: CRUD lengkap + download surat undangan resmi dalam format **.docx** (digenerate dari template Word).
 - **Notulensi Rapat**: CRUD + upload foto dokumentasi + halaman detail. Satu undangan hanya bisa memiliki satu notulensi.
@@ -223,12 +226,32 @@ Variabel `.env` yang relevan dengan aplikasi ini (selebihnya mengikuti default C
 
 Dibuat oleh [`UserSeeder`](app/Database/Seeds/UserSeeder.php):
 
-| NIP | Kata Sandi | Nama | Jabatan |
-|---|---|---|---|
-| 198001012005011001 | password | Administrator ITD | Kepala Program Studi |
-| 198502152010012002 | password | Dr. Siti Rahayu | Sekretaris Prodi |
+| NIP | Kata Sandi | Nama | Jabatan | Role |
+|---|---|---|---|---|
+| 198001012005011001 | password | Administrator ITD | Administrator | `admin` |
+| 197505102003121001 | password | Dr. Budi Santoso | Kepala Program Studi | `kaprodi` |
+| 198502152010012002 | password | Dr. Siti Rahayu | Sekretaris Prodi | `sekretaris` |
+| 199003202019031003 | password | Ahmad Fauzi, M.Kom. | Dosen | `dosen` |
 
 Login menggunakan **NIP**, bukan email. Kata sandi disimpan ter-hash (`password_hash`/`password_verify`).
+
+> **Upgrade dari versi tanpa role:** migration [`AddRoleToUsers`](app/Database/Migrations/2026-09-30-100000_AddRoleToUsers.php) menjadikan **semua akun yang sudah ada berstatus Admin** agar tidak ada yang terkunci. Setelah `php spark migrate`, Admin sebaiknya menurunkan role pengguna lain lewat menu **Pengguna**. Pengguna yang sedang login sebelum migrasi harus **login ulang** agar role masuk ke session.
+
+## Peran dan Hak Akses
+
+Akses dijaga oleh filter route `role` ([`RoleFilter`](app/Filters/RoleFilter.php)); menu dan tombol di UI hanya menyesuaikan tampilan lewat helper `has_role()`. Role disimpan di session saat login, sehingga perubahan role oleh Admin baru berlaku setelah pengguna tersebut login ulang.
+
+| Modul | Admin | Kaprodi | Sekretaris/Staff | Dosen |
+|---|---|---|---|---|
+| Kelola pengguna | ✅ CRUD | ❌ | ❌ | ❌ |
+| Undangan (CRUD + download .docx) | ✅ | 👁 lihat saja | ✅ CRUD | ❌ |
+| Notulensi (CRUD + foto) | ✅ | 👁 lihat saja | ✅ CRUD | ❌ |
+| Dashboard | ✅ | ✅ | ✅ | ✅ (ringkas, tanpa grafik/laporan) |
+| Laporan bulanan/tahunan | ✅ | ✅ | ❌ | ❌ |
+
+Aturan pengelolaan pengguna: Admin tidak dapat menghapus atau mengubah role akunnya sendiri, tidak dapat menghapus/menurunkan Admin terakhir, dan tidak dapat menghapus pengguna yang sudah memiliki undangan/notulensi (FK `created_by` bersifat CASCADE).
+
+Akses Dosen ke arsip yang terverifikasi, alur verifikasi Ketua Program Studi, serta daftar hadir/berita acara/dokumen belum tersedia (tahap berikutnya).
 
 ## Skema Database
 
@@ -243,7 +266,8 @@ Dibuat oleh migration [`CreateArsipRapatTables`](app/Database/Migrations/2026-05
 | nama | VARCHAR(100) | |
 | kata_sandi | VARCHAR(255) | Hash bcrypt |
 | foto_profil | VARCHAR(255), NULL | Kolom tersedia, tapi belum ada form pengelolaan foto profil di UI |
-| jabatan | VARCHAR(100), NULL | Label jabatan, ditampilkan di sidebar |
+| jabatan | VARCHAR(100), NULL | Label jabatan (teks bebas, bukan hak akses) |
+| role | ENUM(`admin`,`kaprodi`,`sekretaris`,`dosen`), default `dosen` | Hak akses; ditambahkan migration `AddRoleToUsers` |
 | created_at, updated_at | DATETIME, NULL | |
 
 **`undangan_rapat`**
@@ -276,7 +300,7 @@ Relasi singkat: `users` 1—N `undangan_rapat`, `users` 1—N `notulensi_rapat`,
 
 ## Daftar Endpoint (Routing)
 
-Didefinisikan di [app/Config/Routes.php](app/Config/Routes.php). Semua route beraturan `auth` mewajibkan sesi login (`AuthFilter`); route `guest` hanya bisa diakses saat *belum* login (`GuestFilter`).
+Didefinisikan di [app/Config/Routes.php](app/Config/Routes.php). Route `auth` mewajibkan sesi login (`AuthFilter`); route `role:<daftar>` mewajibkan login **dan** salah satu role yang disebut (`RoleFilter`; ditolak → redirect `/dashboard`); route `guest` hanya bisa diakses saat *belum* login (`GuestFilter`).
 
 | Method | URI | Aksi | Filter |
 |---|---|---|---|
@@ -284,21 +308,27 @@ Didefinisikan di [app/Config/Routes.php](app/Config/Routes.php). Semua route ber
 | POST | `/login` | `AuthController::login` | guest |
 | GET | `/logout` | `AuthController::logout` | - |
 | GET | `/`, `/dashboard` | `DashboardController::index` | auth |
-| GET | `/dashboard/download` | `DashboardController::downloadLaporan` | auth |
-| GET | `/undangan` | `UndanganController::index` | auth |
-| GET | `/undangan/create` | `UndanganController::create` | auth |
-| POST | `/undangan/store` | `UndanganController::store` | auth |
-| GET | `/undangan/{id}/edit` | `UndanganController::edit` | auth |
-| POST | `/undangan/{id}/update` | `UndanganController::update` | auth |
-| POST | `/undangan/{id}/delete` | `UndanganController::delete` | auth |
-| GET | `/undangan/{id}/download` | `UndanganController::downloadPdf` | auth |
-| GET | `/notulensi` | `NotulensiController::index` | auth |
-| GET | `/notulensi/create` | `NotulensiController::create` | auth |
-| POST | `/notulensi/store` | `NotulensiController::store` | auth |
-| GET | `/notulensi/{id}/show` | `NotulensiController::show` | auth |
-| GET | `/notulensi/{id}/edit` | `NotulensiController::edit` | auth |
-| POST | `/notulensi/{id}/update` | `NotulensiController::update` | auth |
-| POST | `/notulensi/{id}/delete` | `NotulensiController::delete` | auth |
+| GET | `/dashboard/download` | `DashboardController::downloadLaporan` | role:admin,kaprodi |
+| GET | `/undangan` | `UndanganController::index` | role:admin,sekretaris,kaprodi |
+| GET | `/undangan/create` | `UndanganController::create` | role:admin,sekretaris |
+| POST | `/undangan/store` | `UndanganController::store` | role:admin,sekretaris |
+| GET | `/undangan/{id}/edit` | `UndanganController::edit` | role:admin,sekretaris |
+| POST | `/undangan/{id}/update` | `UndanganController::update` | role:admin,sekretaris |
+| POST | `/undangan/{id}/delete` | `UndanganController::delete` | role:admin,sekretaris |
+| GET | `/undangan/{id}/download` | `UndanganController::downloadPdf` | role:admin,sekretaris |
+| GET | `/notulensi` | `NotulensiController::index` | role:admin,sekretaris,kaprodi |
+| GET | `/notulensi/create` | `NotulensiController::create` | role:admin,sekretaris |
+| POST | `/notulensi/store` | `NotulensiController::store` | role:admin,sekretaris |
+| GET | `/notulensi/{id}/show` | `NotulensiController::show` | role:admin,sekretaris,kaprodi |
+| GET | `/notulensi/{id}/edit` | `NotulensiController::edit` | role:admin,sekretaris |
+| POST | `/notulensi/{id}/update` | `NotulensiController::update` | role:admin,sekretaris |
+| POST | `/notulensi/{id}/delete` | `NotulensiController::delete` | role:admin,sekretaris |
+| GET | `/users` | `UserController::index` | role:admin |
+| GET | `/users/create` | `UserController::create` | role:admin |
+| POST | `/users/store` | `UserController::store` | role:admin |
+| GET | `/users/{id}/edit` | `UserController::edit` | role:admin |
+| POST | `/users/{id}/update` | `UserController::update` | role:admin |
+| POST | `/users/{id}/delete` | `UserController::delete` | role:admin |
 
 ## Alur dan Aturan Bisnis
 
@@ -318,7 +348,7 @@ composer install
 vendor\bin\phpunit
 ```
 
-> Catatan: saat ini test yang tersedia masih contoh bawaan CodeIgniter 4 (`tests/unit`, `tests/database`, `tests/session`) — belum ada test khusus untuk `AuthController`, `UndanganController`, atau `NotulensiController`.
+> Test membutuhkan MySQL aktif dan database `arsip_rapat_test` (lihat `phpunit.xml.dist`). Skema dibuat otomatis dari migration.
 
 ## Troubleshooting
 
@@ -334,9 +364,9 @@ vendor\bin\phpunit
 ## Catatan dan Keterbatasan
 
 - Filter `csrf` sudah tersedia sebagai alias ([app/Config/Filters.php](app/Config/Filters.php)) tetapi belum diaktifkan secara global — form belum dilindungi CSRF token.
-- Belum ada halaman untuk mengelola akun user (tambah/edit/hapus) dari UI; akun baru saat ini hanya bisa ditambahkan lewat `UserSeeder` atau langsung ke database.
-- Validasi input pada Controller masih manual (pengecekan `empty()`), belum menggunakan CodeIgniter Validation Library.
-- `jabatan` pada tabel `users` hanya label tampilan, bukan role/permission (semua user punya akses yang sama).
+- Validasi input di `UndanganController` dan `NotulensiController` masih manual (pengecekan `empty()`); hanya manajemen pengguna yang memakai CodeIgniter Validation Library.
+- Role dibaca dari session, jadi perubahan role atau penghapusan akun baru berlaku setelah pengguna bersangkutan login ulang.
+- `jabatan` pada tabel `users` hanya label tampilan; hak akses ditentukan kolom `role`.
 
 ## Riwayat Perubahan
 

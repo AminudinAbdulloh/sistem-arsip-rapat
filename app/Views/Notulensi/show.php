@@ -91,11 +91,13 @@
                     <p>Dibuat oleh: <span class="font-medium"><?= esc($notulensi['created_by_nama']) ?></span></p>
                     <p>Pada: <?= date('d F Y H:i', strtotime($notulensi['created_at'])) ?></p>
                 </div>
-                <div class="flex gap-2">
-                    <a href="/notulensi/<?= $notulensi['id'] ?>/edit" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
-                        <i class="fas fa-edit mr-2"></i>Edit
-                    </a>
-                </div>
+                <?php if (has_role('admin', 'sekretaris')): ?>
+                    <div class="flex gap-2">
+                        <a href="/notulensi/<?= $notulensi['id'] ?>/edit" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
+                            <i class="fas fa-edit mr-2"></i>Edit
+                        </a>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>

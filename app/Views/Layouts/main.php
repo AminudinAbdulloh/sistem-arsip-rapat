@@ -38,14 +38,22 @@
                     <i class="fas fa-tachometer-alt w-5"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="/undangan" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('undangan*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
-                    <i class="fas fa-envelope w-5"></i>
-                    <span>Undangan Rapat</span>
-                </a>
-                <a href="/notulensi" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('notulensi*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
-                    <i class="fas fa-file-alt w-5"></i>
-                    <span>Notulensi</span>
-                </a>
+                <?php if (has_role('admin', 'sekretaris', 'kaprodi')): ?>
+                    <a href="/undangan" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('undangan*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
+                        <i class="fas fa-envelope w-5"></i>
+                        <span>Undangan Rapat</span>
+                    </a>
+                    <a href="/notulensi" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('notulensi*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
+                        <i class="fas fa-file-alt w-5"></i>
+                        <span>Notulensi</span>
+                    </a>
+                <?php endif; ?>
+                <?php if (has_role('admin')): ?>
+                    <a href="/users" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('users*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
+                        <i class="fas fa-users w-5"></i>
+                        <span>Pengguna</span>
+                    </a>
+                <?php endif; ?>
             </nav>
 
             <div class="p-4 border-t border-white/20">
@@ -59,7 +67,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium truncate"><?= esc(session()->get('user')['nama'] ?? 'User') ?></p>
-                        <p class="text-xs text-white/70 truncate"><?= esc(session()->get('user')['jabatan'] ?? '') ?></p>
+                        <p class="text-xs text-white/70 truncate"><?= esc(\App\Models\UserModel::ROLE_LABELS[session()->get('user')['role'] ?? ''] ?? '') ?></p>
                     </div>
                 </div>
                 <a href="/logout" class="mt-3 flex items-center gap-2 text-sm text-white/80 hover:text-white">

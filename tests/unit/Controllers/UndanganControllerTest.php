@@ -45,6 +45,7 @@ final class UndanganControllerTest extends CIUnitTestCase
                 'nip'     => '198001012005011001',
                 'nama'    => 'Administrator ITD',
                 'jabatan' => 'Kepala Program Studi',
+                'role'    => 'admin',
             ],
         ];
     }

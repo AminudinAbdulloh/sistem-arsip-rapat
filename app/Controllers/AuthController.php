@@ -38,6 +38,7 @@ class AuthController extends BaseController
             'nip' => $user['nip'],
             'nama' => $user['nama'],
             'jabatan' => $user['jabatan'],
+            'role' => $user['role'],
             'foto_profil' => $user['foto_profil']
         ];
         session()->set('user', $sessionData);

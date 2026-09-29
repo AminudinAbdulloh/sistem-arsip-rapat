@@ -75,10 +75,12 @@
         </div>
     </div>
 
+    <?php if (has_role('admin', 'kaprodi', 'sekretaris')): ?>
     <!-- Chart Section -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-gray-800">Grafik Arsip Rapat Tahun <?= $tahun ?></h3>
+            <?php if (has_role('admin', 'kaprodi')): ?>
             <div class="flex gap-2">
                 <a href="/dashboard/download?type=bulanan&bulan=<?= $bulan ?>&tahun=<?= $tahun ?>" class="bg-[#1e3a5f] text-white px-4 py-2 rounded-lg hover:bg-[#2d5f8f] transition-colors text-sm">
                     <i class="fas fa-download mr-2"></i>Laporan Bulanan
@@ -87,13 +89,16 @@
                     <i class="fas fa-download mr-2"></i>Laporan Tahunan
                 </a>
             </div>
+            <?php endif; ?>
         </div>
         <div class="h-80">
             <canvas id="chartArsip"></canvas>
         </div>
     </div>
+    <?php endif; ?>
 </div>
 
+<?php if (has_role('admin', 'kaprodi', 'sekretaris')): ?>
 <script>
 const ctx = document.getElementById('chartArsip').getContext('2d');
 const chartData = <?= json_encode($chartData) ?>;
@@ -136,4 +141,5 @@ new Chart(ctx, {
     }
 });
 </script>
+<?php endif; ?>
 <?= $this->endSection() ?>

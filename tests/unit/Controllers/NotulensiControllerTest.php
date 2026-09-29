@@ -54,6 +54,7 @@ final class NotulensiControllerTest extends CIUnitTestCase
                 'nip'     => '198001012005011001',
                 'nama'    => 'Administrator ITD',
                 'jabatan' => 'Kepala Program Studi',
+                'role'    => 'admin',
             ],
         ];
     }

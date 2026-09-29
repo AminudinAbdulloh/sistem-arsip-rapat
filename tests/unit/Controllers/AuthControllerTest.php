@@ -80,4 +80,16 @@ final class AuthControllerTest extends CIUnitTestCase
         $result->assertRedirectTo('/dashboard');
         $result->assertSessionHas('user');
     }
+
+    public function testLoginMenyimpanRoleDiSession(): void
+    {
+        $this->db->table('users')->where('nip', '198001012005011001')->update(['role' => 'kaprodi']);
+
+        $this->withSession()->post('/login', [
+            'nip'        => '198001012005011001',
+            'kata_sandi' => 'password',
+        ]);
+
+        $this->assertSame('kaprodi', session()->get('user')['role']);
+    }
 }
