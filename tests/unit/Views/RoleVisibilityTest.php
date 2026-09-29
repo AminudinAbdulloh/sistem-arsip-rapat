@@ -64,6 +64,56 @@ final class RoleVisibilityTest extends CIUnitTestCase
         $this->assertStringNotContainsString('Laporan Bulanan', $this->page('dosen', '/dashboard'));
     }
 
+    public function testMenuArsipRapatTampilUntukSemuaRole(): void
+    {
+        foreach (['admin', 'kaprodi', 'sekretaris', 'dosen'] as $role) {
+            $this->assertStringContainsString('href="/arsip"', $this->page($role, '/dashboard'), $role);
+        }
+    }
+
+    public function testKartuMenungguVerifikasiHanyaUntukKaprodi(): void
+    {
+        $this->db->table('users')->insert(['nip' => '1', 'nama' => 'S', 'kata_sandi' => 'x', 'role' => 'sekretaris']);
+        $userId = (int) $this->db->insertID();
+        $this->db->table('undangan_rapat')->insert([
+            'hari' => 'Senin', 'waktu' => '2026-10-05 09:00:00', 'tempat' => 'R', 'acara' => 'A', 'created_by' => $userId,
+        ]);
+        $this->db->table('notulensi_rapat')->insert([
+            'undangan_id' => (int) $this->db->insertID(), 'deskripsi_rapat' => 'D', 'created_by' => $userId,
+        ]);
+
+        $kaprodi = $this->page('kaprodi', '/dashboard');
+        $this->assertStringContainsString('Menunggu Verifikasi', $kaprodi);
+        $this->assertStringContainsString('/notulensi?status=menunggu', $kaprodi);
+
+        $this->assertStringNotContainsString('Menunggu Verifikasi', $this->page('sekretaris', '/dashboard'));
+        $this->assertStringNotContainsString('Menunggu Verifikasi', $this->page('dosen', '/dashboard'));
+    }
+
+    public function testDosenMelihatTautanCariArsipDiDashboard(): void
+    {
+        $this->assertStringContainsString('Cari Arsip Rapat', $this->page('dosen', '/dashboard'));
+    }
+
+    public function testLaporanMemuatStatusVerifikasi(): void
+    {
+        $this->db->table('users')->insert(['nip' => '1', 'nama' => 'S', 'kata_sandi' => 'x', 'role' => 'sekretaris']);
+        $userId = (int) $this->db->insertID();
+        $this->db->table('undangan_rapat')->insert([
+            'hari' => 'Senin', 'waktu' => '2026-10-05 09:00:00', 'tempat' => 'R', 'acara' => 'Rapat Laporan', 'created_by' => $userId,
+        ]);
+        $this->db->table('notulensi_rapat')->insert([
+            'undangan_id' => (int) $this->db->insertID(), 'deskripsi_rapat' => 'D', 'created_by' => $userId,
+            'tgl_rapat' => '2026-10-05', 'status_verifikasi' => 'terverifikasi',
+        ]);
+
+        $body = $this->page('kaprodi', '/dashboard/download?type=tahunan&tahun=2026');
+
+        $this->assertStringContainsString('<th>Status</th>', $body);
+        $this->assertStringContainsString('Terverifikasi', $body);
+        $this->assertStringContainsString('Notulensi Terverifikasi', $body);
+    }
+
     public function testDosenTidakMelihatGrafikDashboard(): void
     {
         $this->assertStringNotContainsString('chartArsip', $this->page('dosen', '/dashboard'));

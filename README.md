@@ -12,6 +12,7 @@ Aplikasi web berbasis **CodeIgniter 4** untuk mengelola arsip rapat (undangan & 
 - [Konfigurasi Environment](#konfigurasi-environment)
 - [Akun Default](#akun-default)
 - [Peran dan Hak Akses](#peran-dan-hak-akses)
+- [Verifikasi dan Arsip](#verifikasi-dan-arsip)
 - [Skema Database](#skema-database)
 - [Daftar Endpoint (Routing)](#daftar-endpoint-routing)
 - [Alur dan Aturan Bisnis](#alur-dan-aturan-bisnis)
@@ -26,6 +27,8 @@ Aplikasi web berbasis **CodeIgniter 4** untuk mengelola arsip rapat (undangan & 
 - **Login** menggunakan NIP dan kata sandi (session-based, tanpa registrasi mandiri).
 - **Hak akses berbasis peran** (Admin, Ketua Program Studi, Sekretaris/Staff, Dosen) — lihat [Peran dan Hak Akses](#peran-dan-hak-akses).
 - **Manajemen pengguna** (khusus Admin): tambah, ubah, hapus pengguna, ganti role dan kata sandi.
+- **Verifikasi notulensi** oleh Ketua Program Studi (setujui / tolak dengan alasan) — lihat [Verifikasi dan Arsip](#verifikasi-dan-arsip).
+- **Arsip Rapat**: pencarian notulensi yang sudah terverifikasi (kata kunci dan rentang tanggal), dapat dibuka semua pengguna yang login.
 - **Dashboard** dengan rekap jumlah undangan & notulensi per bulan/tahun serta grafik interaktif (Chart.js).
 - **Undangan Rapat**: CRUD lengkap + download surat undangan resmi dalam format **.docx** (digenerate dari template Word).
 - **Notulensi Rapat**: CRUD + upload foto dokumentasi + halaman detail. Satu undangan hanya bisa memiliki satu notulensi.
@@ -246,12 +249,27 @@ Akses dijaga oleh filter route `role` ([`RoleFilter`](app/Filters/RoleFilter.php
 | Kelola pengguna | ✅ CRUD | ❌ | ❌ | ❌ |
 | Undangan (CRUD + download .docx) | ✅ | 👁 lihat saja | ✅ CRUD | ❌ |
 | Notulensi (CRUD + foto) | ✅ | 👁 lihat saja | ✅ CRUD | ❌ |
-| Dashboard | ✅ | ✅ | ✅ | ✅ (ringkas, tanpa grafik/laporan) |
+| Dashboard | ✅ | ✅ (+ antrean verifikasi) | ✅ | ✅ (ringkas, tanpa grafik/laporan) |
 | Laporan bulanan/tahunan | ✅ | ✅ | ❌ | ❌ |
+| Verifikasi notulensi | ❌ | ✅ | ❌ | ❌ |
+| Arsip Rapat (terverifikasi saja) | ✅ | ✅ | ✅ | ✅ |
 
 Aturan pengelolaan pengguna: Admin tidak dapat menghapus atau mengubah role akunnya sendiri, tidak dapat menghapus/menurunkan Admin terakhir, dan tidak dapat menghapus pengguna yang sudah memiliki undangan/notulensi (FK `created_by` bersifat CASCADE).
 
-Akses Dosen ke arsip yang terverifikasi, alur verifikasi Ketua Program Studi, serta daftar hadir/berita acara/dokumen belum tersedia (tahap berikutnya).
+Daftar hadir, berita acara, dan upload dokumen oleh Sekretaris/Staff belum tersedia (tahap berikutnya).
+
+## Verifikasi dan Arsip
+
+Dibuat oleh migration [`AddVerifikasiToNotulensi`](app/Database/Migrations/2026-09-30-110000_AddVerifikasiToNotulensi.php).
+
+- Setiap notulensi punya status: **Menunggu Verifikasi** (default), **Terverifikasi**, atau **Ditolak**.
+- Hanya **Ketua Program Studi** yang dapat menyetujui/menolak, lewat halaman detail notulensi. Penolakan wajib disertai alasan, yang tampil ke Sekretaris/Admin di halaman detail.
+- Jika notulensi **diubah** oleh Admin/Sekretaris, statusnya kembali ke *Menunggu Verifikasi* (data verifikasi dihapus) karena isinya berubah.
+- Notulensi yang sudah ada sebelum migrasi berstatus *Menunggu Verifikasi* dan perlu diverifikasi Kaprodi.
+- **Arsip Rapat** (`/arsip`) hanya menampilkan notulensi *Terverifikasi*. Pencarian: kata kunci (acara, tempat, isi notulensi, catatan) dan rentang tanggal rapat (tanggal undangan). Notulensi yang belum terverifikasi tidak dapat dibuka lewat `/arsip/{id}`.
+- Daftar Notulensi dapat difilter menurut status; laporan bulanan/tahunan memuat kolom status dan jumlah notulensi terverifikasi.
+
+> Foto dokumentasi disimpan di `public/uploads/dokumentasi/`, sehingga URL langsung ke berkas tetap dapat dibuka oleh siapa pun yang mengetahui nama berkasnya; pembatasan verifikasi hanya berlaku pada halaman aplikasi.
 
 ## Skema Database
 
@@ -323,6 +341,9 @@ Didefinisikan di [app/Config/Routes.php](app/Config/Routes.php). Route `auth` me
 | GET | `/notulensi/{id}/edit` | `NotulensiController::edit` | role:admin,sekretaris |
 | POST | `/notulensi/{id}/update` | `NotulensiController::update` | role:admin,sekretaris |
 | POST | `/notulensi/{id}/delete` | `NotulensiController::delete` | role:admin,sekretaris |
+| POST | `/notulensi/{id}/verifikasi` | `NotulensiController::verifikasi` | role:kaprodi |
+| GET | `/arsip` | `ArsipController::index` | auth |
+| GET | `/arsip/{id}` | `ArsipController::show` | auth |
 | GET | `/users` | `UserController::index` | role:admin |
 | GET | `/users/create` | `UserController::create` | role:admin |
 | POST | `/users/store` | `UserController::store` | role:admin |

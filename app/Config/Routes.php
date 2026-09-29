@@ -36,6 +36,13 @@ $routes->get('/notulensi/(:num)/edit', 'NotulensiController::edit/$1', ['filter'
 $routes->post('/notulensi/(:num)/update', 'NotulensiController::update/$1', ['filter' => 'role:admin,sekretaris']);
 $routes->post('/notulensi/(:num)/delete', 'NotulensiController::delete/$1', ['filter' => 'role:admin,sekretaris']);
 
+// Verifikasi notulensi (khusus kaprodi)
+$routes->post('/notulensi/(:num)/verifikasi', 'NotulensiController::verifikasi/$1', ['filter' => 'role:kaprodi']);
+
+// Arsip rapat: hanya notulensi terverifikasi, dapat dilihat semua yang login
+$routes->get('/arsip', 'ArsipController::index', ['filter' => 'auth']);
+$routes->get('/arsip/(:num)', 'ArsipController::show/$1', ['filter' => 'auth']);
+
 // Manajemen pengguna (khusus admin)
 $routes->get('/users', 'UserController::index', ['filter' => 'role:admin']);
 $routes->get('/users/create', 'UserController::create', ['filter' => 'role:admin']);

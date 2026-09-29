@@ -55,6 +55,7 @@ class DashboardController extends BaseController
             'yearlyUndangan' => $yearlyUndangan,
             'yearlyNotulensi' => $yearlyNotulensi,
             'chartData' => $chartData,
+            'menungguVerifikasi' => $this->notulensiModel->countByStatus('menunggu'),
         ]);
     }
 
@@ -101,14 +102,21 @@ class DashboardController extends BaseController
         }
 
         $notulensiRows = '';
+        $terverifikasi = 0;
         foreach ($notulensi as $i => $n) {
             $tgl = date('d/m/Y', strtotime($n['tgl_rapat']));
+            $status = $n['status_verifikasi'] ?? 'menunggu';
+            $statusLabel = NotulensiRapatModel::STATUS_LABELS[$status] ?? $status;
+            if ($status === 'terverifikasi') {
+                $terverifikasi++;
+            }
             $notulensiRows .= "<tr>
                 <td>" . ($i+1) . "</td>
                 <td>{$tgl}</td>
                 <td>{$n['tema_rapat']}</td>
                 <td>{$n['nama_undangan']}</td>
                 <td>{$n['deskripsi_rapat']}</td>
+                <td>{$statusLabel}</td>
             </tr>";
         }
 
@@ -152,6 +160,10 @@ class DashboardController extends BaseController
     <div class='number'>" . count($notulensi) . "</div>
     <div class='label'>Total Notulensi Rapat</div>
   </div>
+  <div class='summary-box'>
+    <div class='number'>{$terverifikasi}</div>
+    <div class='label'>Notulensi Terverifikasi</div>
+  </div>
 </div>
 
 <div class='section-title'>DAFTAR UNDANGAN RAPAT</div>
@@ -162,7 +174,7 @@ class DashboardController extends BaseController
 
 <div class='section-title'>DAFTAR NOTULENSI RAPAT</div>
 <table>
-  <thead><tr><th>No</th><th>Tgl Rapat</th><th>Tema</th><th>Undangan Terkait</th><th>Deskripsi</th></tr></thead>
+  <thead><tr><th>No</th><th>Tgl Rapat</th><th>Tema</th><th>Undangan Terkait</th><th>Deskripsi</th><th>Status</th></tr></thead>
   <tbody>{$notulensiRows}</tbody>
 </table>
 

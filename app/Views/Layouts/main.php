@@ -48,6 +48,10 @@
                         <span>Notulensi</span>
                     </a>
                 <?php endif; ?>
+                <a href="/arsip" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('arsip*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
+                    <i class="fas fa-folder-open w-5"></i>
+                    <span>Arsip Rapat</span>
+                </a>
                 <?php if (has_role('admin')): ?>
                     <a href="/users" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('users*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
                         <i class="fas fa-users w-5"></i>

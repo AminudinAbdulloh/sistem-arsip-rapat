@@ -75,6 +75,32 @@
         </div>
     </div>
 
+    <?php if (has_role('kaprodi')): ?>
+    <!-- Antrean Verifikasi -->
+    <a href="/notulensi?status=menunggu" class="block bg-yellow-50 border border-yellow-200 rounded-xl p-6 hover:bg-yellow-100 transition-colors">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-yellow-800">Menunggu Verifikasi</p>
+                <p class="text-3xl font-bold text-yellow-700"><?= $menungguVerifikasi ?></p>
+                <p class="text-xs text-yellow-700 mt-1">Notulensi yang perlu Anda setujui atau tolak</p>
+            </div>
+            <i class="fas fa-clipboard-check text-yellow-600 text-3xl"></i>
+        </div>
+    </a>
+    <?php endif; ?>
+
+    <?php if (has_role('dosen')): ?>
+    <a href="/arsip" class="block bg-white border border-gray-200 rounded-xl p-6 hover:bg-gray-50 transition-colors">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="font-semibold text-gray-800">Cari Arsip Rapat</p>
+                <p class="text-sm text-gray-500">Lihat dan cari notulensi rapat yang sudah diverifikasi Ketua Program Studi</p>
+            </div>
+            <i class="fas fa-search text-[#1e3a5f] text-2xl"></i>
+        </div>
+    </a>
+    <?php endif; ?>
+
     <?php if (has_role('admin', 'kaprodi', 'sekretaris')): ?>
     <!-- Chart Section -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">

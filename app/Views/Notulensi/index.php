@@ -12,6 +12,14 @@
         <?php endif; ?>
     </div>
 
+    <!-- Filter Status -->
+    <div class="flex flex-wrap gap-2 text-sm">
+        <a href="/notulensi" class="px-3 py-1.5 rounded-full border <?= empty($status) ? 'bg-[#1e3a5f] text-white border-[#1e3a5f]' : 'border-gray-300 text-gray-600 hover:bg-gray-50' ?>">Semua</a>
+        <?php foreach (\App\Models\NotulensiRapatModel::STATUS_LABELS as $value => $label): ?>
+            <a href="/notulensi?status=<?= $value ?>" class="px-3 py-1.5 rounded-full border <?= $status === $value ? 'bg-[#1e3a5f] text-white border-[#1e3a5f]' : 'border-gray-300 text-gray-600 hover:bg-gray-50' ?>"><?= esc($label) ?></a>
+        <?php endforeach; ?>
+    </div>
+
     <!-- Table -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <table class="w-full">
@@ -19,6 +27,7 @@
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Undangan</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dibuat Oleh</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
                 </tr>
@@ -26,7 +35,7 @@
             <tbody class="divide-y divide-gray-200">
                 <?php if (empty($notulensi)): ?>
                     <tr>
-                        <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
                             <i class="fas fa-inbox text-4xl mb-2"></i>
                             <p>Belum ada notulensi rapat</p>
                         </td>
@@ -36,6 +45,9 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 text-sm text-gray-900"><?= $i + 1 ?></td>
                             <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate"><?= esc($n['nama_undangan']) ?></td>
+                            <td class="px-6 py-4 text-sm">
+                                <?= view('Notulensi/_status_badge', ['status' => $n['status_verifikasi']]) ?>
+                            </td>
                             <td class="px-6 py-4 text-sm text-gray-900"><?= esc($n['created_by_nama']) ?></td>
                             <td class="px-6 py-4 text-sm">
                                 <div class="flex gap-2">

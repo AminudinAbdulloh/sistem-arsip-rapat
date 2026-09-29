@@ -86,6 +86,39 @@
                 </div>
             <?php endif; ?>
 
+            <!-- Status Verifikasi -->
+            <div class="rounded-lg p-4 border <?= $notulensi['status_verifikasi'] === 'ditolak' ? 'bg-red-50 border-red-200' : ($notulensi['status_verifikasi'] === 'terverifikasi' ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200') ?>">
+                <div class="flex items-center gap-3 mb-1">
+                    <p class="text-sm text-gray-500">Status Verifikasi</p>
+                    <?= view('Notulensi/_status_badge', ['status' => $notulensi['status_verifikasi']]) ?>
+                </div>
+                <?php if ($notulensi['status_verifikasi'] !== 'menunggu' && !empty($notulensi['verified_at'])): ?>
+                    <p class="text-sm text-gray-600">
+                        Oleh <span class="font-medium"><?= esc($notulensi['verified_by_nama'] ?? '-') ?></span>
+                        pada <?= date('d F Y H:i', strtotime($notulensi['verified_at'])) ?>
+                    </p>
+                <?php endif; ?>
+                <?php if (!empty($notulensi['catatan_verifikasi'])): ?>
+                    <p class="text-sm text-gray-700 mt-2"><span class="font-medium">Alasan:</span> <?= nl2br(esc($notulensi['catatan_verifikasi'])) ?></p>
+                <?php endif; ?>
+
+                <?php if (has_role('kaprodi')): ?>
+                    <form action="/notulensi/<?= $notulensi['id'] ?>/verifikasi" method="POST" class="mt-4 space-y-3">
+                        <label class="block text-sm font-medium text-gray-700">Catatan / alasan penolakan</label>
+                        <textarea name="catatan" rows="2" placeholder="Wajib diisi jika menolak"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#1e3a5f] outline-none"></textarea>
+                        <div class="flex gap-2">
+                            <button type="submit" name="aksi" value="setujui" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                                <i class="fas fa-check mr-2"></i>Setujui
+                            </button>
+                            <button type="submit" name="aksi" value="tolak" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                                <i class="fas fa-times mr-2"></i>Tolak
+                            </button>
+                        </div>
+                    </form>
+                <?php endif; ?>
+            </div>
+
             <div class="flex items-center justify-between pt-4 border-t border-gray-200">
                 <div class="text-sm text-gray-500">
                     <p>Dibuat oleh: <span class="font-medium"><?= esc($notulensi['created_by_nama']) ?></span></p>

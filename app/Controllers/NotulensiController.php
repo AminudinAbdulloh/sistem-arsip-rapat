@@ -18,10 +18,13 @@ class NotulensiController extends BaseController
 
     public function index(): string
     {
-        $notulensi = $this->model->findAllWithRelations();
+        $status = $this->request->getGet('status');
+        $status = in_array($status, NotulensiRapatModel::STATUS, true) ? $status : null;
+
         return view('Notulensi/index', [
             'title'     => 'Notulensi Rapat - Arsip ITD',
-            'notulensi' => $notulensi,
+            'notulensi' => $this->model->findAllWithRelations($status),
+            'status'    => $status,
         ]);
     }
 
@@ -158,14 +161,43 @@ class NotulensiController extends BaseController
 
         $dokumentasiJson = !empty($existingFotos) ? json_encode(array_values($existingFotos)) : null;
 
-        $this->model->update($id, [
+        // Isi berubah, sehingga perlu diverifikasi ulang oleh Kaprodi.
+        $this->model->update($id, array_merge([
             'undangan_id'     => $undanganId,
             'deskripsi_rapat' => $deskripsi,
             'catatan'         => $catatan,
             'dokumentasi'     => $dokumentasiJson,
-        ]);
+        ], $this->model->resetVerifikasiFields()));
 
         return redirect()->to('/notulensi')->with('success', 'Notulensi rapat berhasil diperbarui.');
+    }
+
+    public function verifikasi(int $id): \CodeIgniter\HTTP\RedirectResponse
+    {
+        if (!$this->model->find($id)) {
+            return redirect()->to('/notulensi')->with('error', 'Notulensi tidak ditemukan.');
+        }
+
+        $aksi    = $this->request->getPost('aksi');
+        $catatan = trim($this->request->getPost('catatan') ?? '');
+        $back    = '/notulensi/' . $id . '/show';
+
+        if ($aksi === 'setujui') {
+            $status  = 'terverifikasi';
+            $pesan   = 'Notulensi berhasil diverifikasi.';
+        } elseif ($aksi === 'tolak') {
+            if ($catatan === '') {
+                return redirect()->to($back)->with('error', 'Alasan penolakan wajib diisi.');
+            }
+            $status  = 'ditolak';
+            $pesan   = 'Notulensi ditolak dan dikembalikan ke Sekretaris.';
+        } else {
+            return redirect()->to($back)->with('error', 'Aksi verifikasi tidak valid.');
+        }
+
+        $this->model->setVerifikasi($id, $status, (int) session()->get('user')['id'], $catatan);
+
+        return redirect()->to($back)->with('success', $pesan);
     }
 
     public function delete(int $id): \CodeIgniter\HTTP\RedirectResponse
