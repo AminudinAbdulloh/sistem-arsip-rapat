@@ -13,6 +13,7 @@ Aplikasi web berbasis **CodeIgniter 4** untuk mengelola arsip rapat (undangan & 
 - [Akun Default](#akun-default)
 - [Peran dan Hak Akses](#peran-dan-hak-akses)
 - [Verifikasi dan Arsip](#verifikasi-dan-arsip)
+- [Kelengkapan Rapat](#kelengkapan-rapat)
 - [Skema Database](#skema-database)
 - [Daftar Endpoint (Routing)](#daftar-endpoint-routing)
 - [Alur dan Aturan Bisnis](#alur-dan-aturan-bisnis)
@@ -29,6 +30,7 @@ Aplikasi web berbasis **CodeIgniter 4** untuk mengelola arsip rapat (undangan & 
 - **Manajemen pengguna** (khusus Admin): tambah, ubah, hapus pengguna, ganti role dan kata sandi.
 - **Verifikasi notulensi** oleh Ketua Program Studi (setujui / tolak dengan alasan) — lihat [Verifikasi dan Arsip](#verifikasi-dan-arsip).
 - **Arsip Rapat**: pencarian notulensi yang sudah terverifikasi (kata kunci dan rentang tanggal), dapat dibuka semua pengguna yang login.
+- **Kelengkapan Rapat** per undangan: daftar hadir, berita acara (dengan halaman cetak), dan upload dokumen — lihat [Kelengkapan Rapat](#kelengkapan-rapat).
 - **Dashboard** dengan rekap jumlah undangan & notulensi per bulan/tahun serta grafik interaktif (Chart.js).
 - **Undangan Rapat**: CRUD lengkap + download surat undangan resmi dalam format **.docx** (digenerate dari template Word).
 - **Notulensi Rapat**: CRUD + upload foto dokumentasi + halaman detail. Satu undangan hanya bisa memiliki satu notulensi.
@@ -253,10 +255,9 @@ Akses dijaga oleh filter route `role` ([`RoleFilter`](app/Filters/RoleFilter.php
 | Laporan bulanan/tahunan | ✅ | ✅ | ❌ | ❌ |
 | Verifikasi notulensi | ❌ | ✅ | ❌ | ❌ |
 | Arsip Rapat (terverifikasi saja) | ✅ | ✅ | ✅ | ✅ |
+| Kelengkapan rapat (daftar hadir, berita acara, dokumen) | ✅ CRUD | 👁 lihat + unduh | ✅ CRUD | ❌ (hanya lewat detail arsip terverifikasi) |
 
 Aturan pengelolaan pengguna: Admin tidak dapat menghapus atau mengubah role akunnya sendiri, tidak dapat menghapus/menurunkan Admin terakhir, dan tidak dapat menghapus pengguna yang sudah memiliki undangan/notulensi (FK `created_by` bersifat CASCADE).
-
-Daftar hadir, berita acara, dan upload dokumen oleh Sekretaris/Staff belum tersedia (tahap berikutnya).
 
 ## Verifikasi dan Arsip
 
@@ -269,7 +270,19 @@ Dibuat oleh migration [`AddVerifikasiToNotulensi`](app/Database/Migrations/2026-
 - **Arsip Rapat** (`/arsip`) hanya menampilkan notulensi *Terverifikasi*. Pencarian: kata kunci (acara, tempat, isi notulensi, catatan) dan rentang tanggal rapat (tanggal undangan). Notulensi yang belum terverifikasi tidak dapat dibuka lewat `/arsip/{id}`.
 - Daftar Notulensi dapat difilter menurut status; laporan bulanan/tahunan memuat kolom status dan jumlah notulensi terverifikasi.
 
-> Foto dokumentasi disimpan di `public/uploads/dokumentasi/`, sehingga URL langsung ke berkas tetap dapat dibuka oleh siapa pun yang mengetahui nama berkasnya; pembatasan verifikasi hanya berlaku pada halaman aplikasi.
+> Foto dokumentasi notulensi disimpan di `public/uploads/dokumentasi/`, sehingga URL langsung ke berkas tetap dapat dibuka oleh siapa pun yang mengetahui nama berkasnya; pembatasan verifikasi hanya berlaku pada halaman aplikasi. (Dokumen rapat pada [Kelengkapan Rapat](#kelengkapan-rapat) tidak memiliki keterbatasan ini.)
+
+## Kelengkapan Rapat
+
+Dibuat oleh migration [`CreateKelengkapanRapatTables`](app/Database/Migrations/2026-09-30-120000_CreateKelengkapanRapatTables.php). Dibuka dari ikon folder pada daftar Undangan (`/undangan/{id}/kelengkapan`).
+
+- **Daftar hadir**: peserta (nama bebas), jabatan, status *Hadir/Izin/Tidak Hadir*, keterangan.
+- **Berita acara**: satu per undangan (nomor, uraian, keputusan); tombol **Cetak** membuka halaman siap cetak beserta daftar hadir.
+- **Dokumen**: unggah PDF, Word, Excel, PowerPoint, JPG, atau PNG (maks. 10 MB). Berkas disimpan di `writable/uploads/dokumen/` dengan nama acak, di luar web root, dan diunduh lewat `/dokumen/{id}/download`.
+- Admin dan Sekretaris dapat mengubah; Kaprodi hanya melihat dan mengunduh. Dosen melihat daftar hadir, berita acara, dan dokumen pada **detail arsip** rapat yang notulensinya terverifikasi, dan hanya dokumen rapat tersebut yang dapat diunduh.
+- Menghapus undangan ikut menghapus kelengkapannya, termasuk berkas fisik dokumen.
+- Mengubah kelengkapan tidak mengembalikan status verifikasi notulensi.
+- Pastikan folder `writable/` dapat ditulis; folder `writable/uploads/dokumen/` dibuat otomatis saat unggahan pertama.
 
 ## Skema Database
 
@@ -344,6 +357,14 @@ Didefinisikan di [app/Config/Routes.php](app/Config/Routes.php). Route `auth` me
 | POST | `/notulensi/{id}/verifikasi` | `NotulensiController::verifikasi` | role:kaprodi |
 | GET | `/arsip` | `ArsipController::index` | auth |
 | GET | `/arsip/{id}` | `ArsipController::show` | auth |
+| GET | `/undangan/{id}/kelengkapan` | `KelengkapanController::show` | role:admin,sekretaris,kaprodi |
+| POST | `/undangan/{id}/hadir/store` | `DaftarHadirController::store` | role:admin,sekretaris |
+| POST | `/hadir/{id}/delete` | `DaftarHadirController::delete` | role:admin,sekretaris |
+| POST | `/undangan/{id}/berita-acara/save` | `BeritaAcaraController::save` | role:admin,sekretaris |
+| GET | `/undangan/{id}/berita-acara/cetak` | `BeritaAcaraController::cetak` | role:admin,sekretaris,kaprodi |
+| POST | `/undangan/{id}/dokumen/store` | `DokumenRapatController::store` | role:admin,sekretaris |
+| POST | `/dokumen/{id}/delete` | `DokumenRapatController::delete` | role:admin,sekretaris |
+| GET | `/dokumen/{id}/download` | `DokumenRapatController::download` | auth (akses dicek di controller) |
 | GET | `/users` | `UserController::index` | role:admin |
 | GET | `/users/create` | `UserController::create` | role:admin |
 | POST | `/users/store` | `UserController::store` | role:admin |

@@ -53,6 +53,65 @@ if (!empty($arsip['dokumentasi'])) {
                 </div>
             <?php endif; ?>
 
+            <!-- Daftar Hadir -->
+            <div class="bg-gray-50 rounded-lg p-4">
+                <p class="text-sm text-gray-500 mb-3"><i class="fas fa-user-check mr-2"></i>Daftar Hadir</p>
+                <?php if (empty($hadir)): ?>
+                    <p class="text-sm text-gray-500">Belum ada daftar hadir.</p>
+                <?php else: ?>
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-xs text-gray-500 uppercase">
+                                <th class="py-1 pr-3">No</th><th class="py-1 pr-3">Nama</th><th class="py-1 pr-3">Jabatan</th><th class="py-1">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <?php foreach ($hadir as $i => $h): ?>
+                                <tr>
+                                    <td class="py-1 pr-3"><?= $i + 1 ?></td>
+                                    <td class="py-1 pr-3"><?= esc($h['nama']) ?></td>
+                                    <td class="py-1 pr-3"><?= esc($h['jabatan'] ?? '') ?></td>
+                                    <td class="py-1"><?= esc(\App\Models\DaftarHadirModel::STATUS_LABELS[$h['status']] ?? $h['status']) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            </div>
+
+            <!-- Berita Acara -->
+            <?php if ($beritaAcara): ?>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="text-sm text-gray-500 mb-2"><i class="fas fa-file-signature mr-2"></i>Berita Acara
+                        <?php if (!empty($beritaAcara['nomor'])): ?><span class="text-gray-800">(<?= esc($beritaAcara['nomor']) ?>)</span><?php endif; ?>
+                    </p>
+                    <div><?= nl2br(esc($beritaAcara['uraian'])) ?></div>
+                    <?php if (!empty($beritaAcara['keputusan'])): ?>
+                        <div class="mt-3 bg-green-50 rounded-lg p-3 border border-green-200">
+                            <p class="text-green-700 font-medium mb-1">Keputusan</p>
+                            <?= nl2br(esc($beritaAcara['keputusan'])) ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
+            <!-- Dokumen -->
+            <?php if (!empty($dokumen)): ?>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="text-sm text-gray-500 mb-3"><i class="fas fa-paperclip mr-2"></i>Dokumen Rapat</p>
+                    <ul class="space-y-2">
+                        <?php foreach ($dokumen as $d): ?>
+                            <li>
+                                <a href="/dokumen/<?= $d['id'] ?>/download" class="text-blue-600 hover:text-blue-800">
+                                    <i class="fas fa-download mr-2"></i><?= esc($d['judul']) ?>
+                                </a>
+                                <span class="text-xs text-gray-500">(<?= esc($d['nama_asli']) ?>, <?= number_format($d['ukuran'] / 1024, 0, ',', '.') ?> KB)</span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+
             <div class="pt-4 border-t border-gray-200 text-sm text-gray-500">
                 <p>
                     <i class="fas fa-check-circle text-green-600 mr-1"></i>Diverifikasi

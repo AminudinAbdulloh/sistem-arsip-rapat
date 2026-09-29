@@ -75,6 +75,14 @@ class NotulensiRapatModel extends Model
                     ->first();
     }
 
+    /** True bila undangan ini punya notulensi berstatus terverifikasi. */
+    public function isUndanganVerified(int $undanganId): bool
+    {
+        return $this->where('undangan_id', $undanganId)
+                    ->where('status_verifikasi', 'terverifikasi')
+                    ->countAllResults() > 0;
+    }
+
     public function countByStatus(string $status): int
     {
         return $this->where('status_verifikasi', $status)->countAllResults();

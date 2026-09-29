@@ -34,6 +34,15 @@ class FakeUploadedFile extends UploadedFile
         );
     }
 
+    /**
+     * UploadedFile::isValid() juga memanggil is_uploaded_file() yang selalu false
+     * di CLI; untuk test double cukup memeriksa kode error unggahan.
+     */
+    public function isValid(): bool
+    {
+        return $this->getError() === UPLOAD_ERR_OK;
+    }
+
     public function move(string $targetPath, ?string $name = null, bool $overwrite = false)
     {
         return true;

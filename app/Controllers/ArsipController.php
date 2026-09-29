@@ -2,6 +2,9 @@
 
 namespace App\Controllers;
 
+use App\Models\BeritaAcaraModel;
+use App\Models\DaftarHadirModel;
+use App\Models\DokumenRapatModel;
 use App\Models\NotulensiRapatModel;
 use CodeIgniter\HTTP\RedirectResponse;
 
@@ -36,9 +39,14 @@ class ArsipController extends BaseController
             return redirect()->to('/arsip')->with('error', 'Arsip tidak ditemukan.');
         }
 
+        $undanganId = (int) $arsip['undangan_id'];
+
         return view('Arsip/show', [
-            'title' => 'Detail Arsip Rapat',
-            'arsip' => $arsip,
+            'title'       => 'Detail Arsip Rapat',
+            'arsip'       => $arsip,
+            'hadir'       => (new DaftarHadirModel())->findByUndangan($undanganId),
+            'beritaAcara' => (new BeritaAcaraModel())->findByUndangan($undanganId),
+            'dokumen'     => (new DokumenRapatModel())->findByUndangan($undanganId),
         ]);
     }
 

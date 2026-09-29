@@ -150,6 +150,38 @@ final class ArsipControllerTest extends CIUnitTestCase
         return ['menunggu' => ['pendingId'], 'ditolak' => ['rejectedId']];
     }
 
+    public function testDetailArsipMenampilkanKelengkapanRapat(): void
+    {
+        $undanganId = (int) $this->db->table('notulensi_rapat')->where('id', $this->verifiedId)->get()->getRow()->undangan_id;
+        $this->db->table('daftar_hadir')->insert(['undangan_id' => $undanganId, 'nama' => 'Peserta Hadir Uji', 'status' => 'hadir']);
+        $this->db->table('berita_acara')->insert([
+            'undangan_id' => $undanganId, 'nomor' => '07/BA/2026', 'uraian' => 'Uraian berita acara uji',
+            'keputusan' => 'Keputusan uji', 'created_by' => $this->userId,
+        ]);
+        $this->db->table('dokumen_rapat')->insert([
+            'undangan_id' => $undanganId, 'judul' => 'Materi Uji', 'berkas' => 'x.pdf', 'nama_asli' => 'materi.pdf',
+            'ukuran' => 10, 'uploaded_by' => $this->userId,
+        ]);
+        $dokId = (int) $this->db->insertID();
+
+        $body = $this->asDosen()->get("/arsip/{$this->verifiedId}")->getBody();
+
+        $this->assertStringContainsString('Peserta Hadir Uji', $body);
+        $this->assertStringContainsString('07/BA/2026', $body);
+        $this->assertStringContainsString('Uraian berita acara uji', $body);
+        $this->assertStringContainsString('Keputusan uji', $body);
+        $this->assertStringContainsString('Materi Uji', $body);
+        $this->assertStringContainsString("/dokumen/{$dokId}/download", $body);
+    }
+
+    public function testDetailArsipTanpaKelengkapanTidakError(): void
+    {
+        $result = $this->asDosen()->get("/arsip/{$this->verifiedId}");
+
+        $result->assertOK();
+        $this->assertStringContainsString('Belum ada daftar hadir', $result->getBody());
+    }
+
     public function testDetailArsipTidakAdaDiarahkanKeDaftar(): void
     {
         $this->asDosen()->get('/arsip/99999')->assertRedirectTo('/arsip');

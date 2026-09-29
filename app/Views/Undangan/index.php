@@ -45,6 +45,9 @@
                             <td class="px-6 py-4 text-sm text-gray-900"><?= esc($u['created_by_nama']) ?></td>
                             <td class="px-6 py-4 text-sm">
                                 <div class="flex gap-2">
+                                    <a href="/undangan/<?= $u['id'] ?>/kelengkapan" class="text-indigo-600 hover:text-indigo-800" title="Kelengkapan Rapat (daftar hadir, berita acara, dokumen)">
+                                        <i class="fas fa-folder-open"></i>
+                                    </a>
                                     <?php if (has_role('admin', 'sekretaris')): ?>
                                         <a href="/undangan/<?= $u['id'] ?>/download" class="text-blue-600 hover:text-blue-800" title="Download Word">
                                             <i class="fas fa-file-word"></i>
@@ -57,8 +60,6 @@
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
-                                    <?php else: ?>
-                                        <span class="text-gray-400 text-xs">-</span>
                                     <?php endif; ?>
                                 </div>
                             </td>

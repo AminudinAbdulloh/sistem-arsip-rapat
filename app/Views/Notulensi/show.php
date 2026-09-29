@@ -27,6 +27,9 @@
             <div class="bg-gray-50 rounded-lg p-4">
                 <p class="text-sm text-gray-500">Undangan Terkait</p>
                 <p class="font-medium"><?= esc($notulensi['nama_undangan']) ?></p>
+                <a href="/undangan/<?= $notulensi['undangan_id'] ?>/kelengkapan" class="inline-block mt-2 text-sm text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-folder-open mr-1"></i>Daftar hadir, berita acara &amp; dokumen
+                </a>
             </div>
 
             <div class="bg-gray-50 rounded-lg p-4">

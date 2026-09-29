@@ -90,6 +90,8 @@ class UndanganController extends BaseController
         if ($this->model->hasNotulensi($id)) {
             return redirect()->to('/undangan')->with('error', 'Undangan tidak dapat dihapus karena sudah memiliki notulensi.');
         }
+        // Baris daftar hadir/berita acara/dokumen ikut terhapus (CASCADE); berkas fisik dibersihkan di sini.
+        (new \App\Libraries\DokumenRapatService())->hapusBerkasUndangan($id);
         $this->model->delete($id);
         return redirect()->to('/undangan')->with('success', 'Undangan rapat berhasil dihapus.');
     }

@@ -36,6 +36,17 @@ $routes->get('/notulensi/(:num)/edit', 'NotulensiController::edit/$1', ['filter'
 $routes->post('/notulensi/(:num)/update', 'NotulensiController::update/$1', ['filter' => 'role:admin,sekretaris']);
 $routes->post('/notulensi/(:num)/delete', 'NotulensiController::delete/$1', ['filter' => 'role:admin,sekretaris']);
 
+// Kelengkapan rapat (baca: admin, sekretaris, kaprodi; tulis: admin, sekretaris)
+$routes->get('/undangan/(:num)/kelengkapan', 'KelengkapanController::show/$1', ['filter' => 'role:admin,sekretaris,kaprodi']);
+$routes->post('/undangan/(:num)/hadir/store', 'DaftarHadirController::store/$1', ['filter' => 'role:admin,sekretaris']);
+$routes->post('/hadir/(:num)/delete', 'DaftarHadirController::delete/$1', ['filter' => 'role:admin,sekretaris']);
+$routes->post('/undangan/(:num)/berita-acara/save', 'BeritaAcaraController::save/$1', ['filter' => 'role:admin,sekretaris']);
+$routes->get('/undangan/(:num)/berita-acara/cetak', 'BeritaAcaraController::cetak/$1', ['filter' => 'role:admin,sekretaris,kaprodi']);
+$routes->post('/undangan/(:num)/dokumen/store', 'DokumenRapatController::store/$1', ['filter' => 'role:admin,sekretaris']);
+$routes->post('/dokumen/(:num)/delete', 'DokumenRapatController::delete/$1', ['filter' => 'role:admin,sekretaris']);
+// Unduh dokumen: hak akses diperiksa di controller (dosen hanya untuk rapat terverifikasi)
+$routes->get('/dokumen/(:num)/download', 'DokumenRapatController::download/$1', ['filter' => 'auth']);
+
 // Verifikasi notulensi (khusus kaprodi)
 $routes->post('/notulensi/(:num)/verifikasi', 'NotulensiController::verifikasi/$1', ['filter' => 'role:kaprodi']);
 
