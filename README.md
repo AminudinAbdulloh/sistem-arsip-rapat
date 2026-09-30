@@ -120,7 +120,7 @@ Lalu buka `.env` dan aktifkan (hapus tanda `#`) serta sesuaikan minimal bagian b
 ```dotenv
 CI_ENVIRONMENT = development
 
-app.baseURL = 'http://localhost:8080/'
+app.baseURL = 'http://localhost:8000/'
 
 database.default.hostname = localhost
 database.default.database = arsip_rapat
@@ -183,7 +183,7 @@ Pilih salah satu:
 php spark serve
 ```
 
-Akses di `http://localhost:8080`.
+Akses di `http://localhost:8000`.
 
 **Opsi B — Apache XAMPP langsung dari folder htdocs:**
 
@@ -219,7 +219,7 @@ Variabel `.env` yang relevan dengan aplikasi ini (selebihnya mengikuti default C
 | Variabel | Contoh Nilai | Keterangan |
 |---|---|---|
 | `CI_ENVIRONMENT` | `development` | Gunakan `development` di lokal agar error PHP tampil jelas (bukan halaman 500 generik). |
-| `app.baseURL` | `http://localhost:8080/` | Wajib disesuaikan dengan cara kamu mengakses aplikasi (lihat [langkah 8](#8-jalankan-aplikasi)). |
+| `app.baseURL` | `http://localhost:8000/` | Wajib disesuaikan dengan cara kamu mengakses aplikasi (lihat [langkah 8](#8-jalankan-aplikasi)). |
 | `database.default.hostname` | `localhost` | Host database. |
 | `database.default.database` | `arsip_rapat` | Nama database (default di `Config\Database` kosong, wajib diisi). |
 | `database.default.username` | `root` | User default XAMPP. |
