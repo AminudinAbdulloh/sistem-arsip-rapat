@@ -6,7 +6,7 @@
     <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-800">Daftar Undangan Rapat</h3>
         <?php if (has_role('admin', 'sekretaris')): ?>
-            <a href="/undangan/create" class="bg-[#1e3a5f] text-white px-4 py-2 rounded-lg hover:bg-[#2d5f8f] transition-colors">
+            <a href="<?= base_url() ?>undangan/create" class="bg-[#1e3a5f] text-white px-4 py-2 rounded-lg hover:bg-[#2d5f8f] transition-colors">
                 <i class="fas fa-plus mr-2"></i>Tambah Undangan
             </a>
         <?php endif; ?>
@@ -45,17 +45,17 @@
                             <td class="px-6 py-4 text-sm text-gray-900"><?= esc($u['created_by_nama']) ?></td>
                             <td class="px-6 py-4 text-sm">
                                 <div class="flex gap-2">
-                                    <a href="/undangan/<?= $u['id'] ?>/kelengkapan" class="text-indigo-600 hover:text-indigo-800" title="Kelengkapan Rapat (daftar hadir, berita acara, dokumen)">
+                                    <a href="<?= base_url() ?>undangan/<?= $u['id'] ?>/kelengkapan" class="text-indigo-600 hover:text-indigo-800" title="Kelengkapan Rapat (daftar hadir, berita acara, dokumen)">
                                         <i class="fas fa-folder-open"></i>
                                     </a>
                                     <?php if (has_role('admin', 'sekretaris')): ?>
-                                        <a href="/undangan/<?= $u['id'] ?>/download" class="text-blue-600 hover:text-blue-800" title="Download Word">
+                                        <a href="<?= base_url() ?>undangan/<?= $u['id'] ?>/download" class="text-blue-600 hover:text-blue-800" title="Download Word">
                                             <i class="fas fa-file-word"></i>
                                         </a>
-                                        <a href="/undangan/<?= $u['id'] ?>/edit" class="text-yellow-600 hover:text-yellow-800" title="Edit">
+                                        <a href="<?= base_url() ?>undangan/<?= $u['id'] ?>/edit" class="text-yellow-600 hover:text-yellow-800" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="/undangan/<?= $u['id'] ?>/delete" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus undangan ini?')">
+                                        <form action="<?= base_url() ?>undangan/<?= $u['id'] ?>/delete" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus undangan ini?')">
                                             <button type="submit" class="text-red-600 hover:text-red-800" title="Hapus">
                                                 <i class="fas fa-trash"></i>
                                             </button>

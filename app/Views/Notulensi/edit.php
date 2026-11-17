@@ -15,7 +15,7 @@
         }
         ?>
 
-        <form action="/notulensi/<?= $notulensi['id'] ?>/update" method="POST" enctype="multipart/form-data" class="space-y-5">
+        <form action="<?= base_url() ?>notulensi/<?= $notulensi['id'] ?>/update" method="POST" enctype="multipart/form-data" class="space-y-5">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Undangan Rapat <span class="text-red-500">*</span></label>
                 <select name="undangan_id" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#1e3a5f] outline-none">
@@ -53,7 +53,7 @@
                         <?php foreach ($existingFotos as $foto): ?>
                             <div class="existing-item relative rounded-xl overflow-hidden border-2 border-transparent transition-all duration-200"
                                 id="wrap-<?= esc($foto) ?>">
-                                <img src="/uploads/dokumentasi/<?= esc($foto) ?>"
+                                <img src="<?= base_url() ?>uploads/dokumentasi/<?= esc($foto) ?>"
                                     alt="Dokumentasi"
                                     class="w-full aspect-square object-cover">
                                 <label class="absolute top-2 right-2 flex items-center gap-1 bg-white/90 rounded-md px-1.5 py-0.5 cursor-pointer shadow text-xs text-red-600 font-medium select-none">
@@ -87,7 +87,7 @@
             </div>
 
             <div class="flex gap-3 pt-4">
-                <a href="/notulensi" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <a href="<?= base_url() ?>notulensi" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                     Batal
                 </a>
                 <button type="submit" class="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d5f8f] transition-colors">

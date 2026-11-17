@@ -36,7 +36,7 @@
             </div>
         <?php endif; ?>
 
-        <form action="/login" method="POST" class="space-y-5">
+        <form action="<?= base_url() ?>login" method="POST" class="space-y-5">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
                 <div class="relative">

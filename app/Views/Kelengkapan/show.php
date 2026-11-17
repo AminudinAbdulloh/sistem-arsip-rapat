@@ -21,13 +21,13 @@ $inputCls = 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 foc
                 <?php if ($notulensi): ?>
                     <p class="text-sm mt-2">
                         Notulensi:
-                        <a href="/notulensi/<?= $notulensi['id'] ?>/show" class="text-blue-600 hover:text-blue-800">
+                        <a href="<?= base_url() ?>notulensi/<?= $notulensi['id'] ?>/show" class="text-blue-600 hover:text-blue-800">
                             <?= esc(\App\Models\NotulensiRapatModel::STATUS_LABELS[$notulensi['status_verifikasi']] ?? $notulensi['status_verifikasi']) ?>
                         </a>
                     </p>
                 <?php endif; ?>
             </div>
-            <a href="/undangan" class="text-gray-600 hover:text-gray-800 whitespace-nowrap">
+            <a href="<?= base_url() ?>undangan" class="text-gray-600 hover:text-gray-800 whitespace-nowrap">
                 <i class="fas fa-arrow-left mr-1"></i>Kembali
             </a>
         </div>
@@ -64,7 +64,7 @@ $inputCls = 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 foc
                                 <td class="px-4 py-2"><?= esc($h['keterangan'] ?? '') ?></td>
                                 <?php if ($bisaUbah): ?>
                                     <td class="px-4 py-2 text-right">
-                                        <form action="/hadir/<?= $h['id'] ?>/delete" method="POST" onsubmit="return confirm('Hapus peserta ini dari daftar hadir?')">
+                                        <form action="<?= base_url() ?>hadir/<?= $h['id'] ?>/delete" method="POST" onsubmit="return confirm('Hapus peserta ini dari daftar hadir?')">
                                             <button type="submit" class="text-red-600 hover:text-red-800" title="Hapus"><i class="fas fa-trash"></i></button>
                                         </form>
                                     </td>
@@ -77,7 +77,7 @@ $inputCls = 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 foc
         <?php endif; ?>
 
         <?php if ($bisaUbah): ?>
-            <form action="/undangan/<?= $id ?>/hadir/store" method="POST" class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end border-t border-gray-200 pt-4">
+            <form action="<?= base_url() ?>undangan/<?= $id ?>/hadir/store" method="POST" class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end border-t border-gray-200 pt-4">
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Nama <span class="text-red-500">*</span></label>
                     <input type="text" name="nama" required maxlength="100" class="<?= $inputCls ?>">
@@ -112,14 +112,14 @@ $inputCls = 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 foc
         <div class="flex items-center justify-between mb-4">
             <h4 class="font-semibold text-gray-800"><i class="fas fa-file-signature mr-2 text-[#1e3a5f]"></i>Berita Acara</h4>
             <?php if ($beritaAcara): ?>
-                <a href="/undangan/<?= $id ?>/berita-acara/cetak" target="_blank" class="text-sm text-blue-600 hover:text-blue-800">
+                <a href="<?= base_url() ?>undangan/<?= $id ?>/berita-acara/cetak" target="_blank" class="text-sm text-blue-600 hover:text-blue-800">
                     <i class="fas fa-print mr-1"></i>Cetak
                 </a>
             <?php endif; ?>
         </div>
 
         <?php if ($bisaUbah): ?>
-            <form action="/undangan/<?= $id ?>/berita-acara/save" method="POST" class="space-y-3">
+            <form action="<?= base_url() ?>undangan/<?= $id ?>/berita-acara/save" method="POST" class="space-y-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Nomor</label>
                     <input type="text" name="nomor" maxlength="100" value="<?= esc($beritaAcara['nomor'] ?? '') ?>" class="<?= $inputCls ?>">
@@ -165,7 +165,7 @@ $inputCls = 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 foc
                 <?php foreach ($dokumen as $d): ?>
                     <li class="py-3 flex items-center justify-between gap-3">
                         <div class="min-w-0">
-                            <a href="/dokumen/<?= $d['id'] ?>/download" class="font-medium text-blue-600 hover:text-blue-800 truncate block">
+                            <a href="<?= base_url() ?>dokumen/<?= $d['id'] ?>/download" class="font-medium text-blue-600 hover:text-blue-800 truncate block">
                                 <i class="fas fa-download mr-2"></i><?= esc($d['judul']) ?>
                             </a>
                             <p class="text-xs text-gray-500">
@@ -174,7 +174,7 @@ $inputCls = 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 foc
                             </p>
                         </div>
                         <?php if ($bisaUbah): ?>
-                            <form action="/dokumen/<?= $d['id'] ?>/delete" method="POST" onsubmit="return confirm('Hapus dokumen ini?')">
+                            <form action="<?= base_url() ?>dokumen/<?= $d['id'] ?>/delete" method="POST" onsubmit="return confirm('Hapus dokumen ini?')">
                                 <button type="submit" class="text-red-600 hover:text-red-800" title="Hapus"><i class="fas fa-trash"></i></button>
                             </form>
                         <?php endif; ?>
@@ -184,7 +184,7 @@ $inputCls = 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 foc
         <?php endif; ?>
 
         <?php if ($bisaUbah): ?>
-            <form action="/undangan/<?= $id ?>/dokumen/store" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end border-t border-gray-200 pt-4">
+            <form action="<?= base_url() ?>undangan/<?= $id ?>/dokumen/store" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end border-t border-gray-200 pt-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Judul</label>
                     <input type="text" name="judul" maxlength="150" placeholder="Kosong = nama berkas" class="<?= $inputCls ?>">

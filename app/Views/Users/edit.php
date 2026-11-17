@@ -6,7 +6,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-6">Edit Pengguna</h3>
 
-        <form action="/users/<?= $user['id'] ?>/update" method="POST" class="space-y-5">
+        <form action="<?= base_url() ?>users/<?= $user['id'] ?>/update" method="POST" class="space-y-5">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">NIP <span class="text-red-500">*</span></label>
                 <input type="text" name="nip" required maxlength="20" value="<?= esc(old('nip', $user['nip'])) ?>"
@@ -50,7 +50,7 @@
             </div>
 
             <div class="flex gap-3 pt-4">
-                <a href="/users" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Batal</a>
+                <a href="<?= base_url() ?>users" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Batal</a>
                 <button type="submit" class="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d5f8f] transition-colors">
                     <i class="fas fa-save mr-2"></i>Simpan
                 </button>

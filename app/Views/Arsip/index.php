@@ -3,7 +3,7 @@
 <?= $this->section('content') ?>
 <div class="space-y-6">
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <form method="GET" action="/arsip" class="flex flex-wrap items-end gap-4">
+        <form method="GET" action="<?= base_url() ?>arsip" class="flex flex-wrap items-end gap-4">
             <div class="flex-1 min-w-[220px]">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Kata Kunci</label>
                 <input type="text" name="q" value="<?= esc($filters['q']) ?>" placeholder="Acara, tempat, atau isi notulensi"
@@ -23,7 +23,7 @@
                 <i class="fas fa-search mr-2"></i>Cari
             </button>
             <?php if ($filters['q'] !== '' || $filters['dari'] !== '' || $filters['sampai'] !== ''): ?>
-                <a href="/arsip" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Reset</a>
+                <a href="<?= base_url() ?>arsip" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Reset</a>
             <?php endif; ?>
         </form>
     </div>
@@ -55,7 +55,7 @@
                             <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate"><?= esc($a['nama_undangan']) ?></td>
                             <td class="px-6 py-4 text-sm text-gray-900"><?= esc($a['tempat']) ?></td>
                             <td class="px-6 py-4 text-sm">
-                                <a href="/arsip/<?= $a['id'] ?>" class="text-blue-600 hover:text-blue-800" title="Lihat Detail">
+                                <a href="<?= base_url() ?>arsip/<?= $a['id'] ?>" class="text-blue-600 hover:text-blue-800" title="Lihat Detail">
                                     <i class="fas fa-eye"></i>
                                 </a>
                             </td>

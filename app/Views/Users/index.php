@@ -4,7 +4,7 @@
 <div class="space-y-6">
     <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-800">Daftar Pengguna</h3>
-        <a href="/users/create" class="bg-[#1e3a5f] text-white px-4 py-2 rounded-lg hover:bg-[#2d5f8f] transition-colors">
+        <a href="<?= base_url() ?>users/create" class="bg-[#1e3a5f] text-white px-4 py-2 rounded-lg hover:bg-[#2d5f8f] transition-colors">
             <i class="fas fa-plus mr-2"></i>Tambah Pengguna
         </a>
     </div>
@@ -43,11 +43,11 @@
                             </td>
                             <td class="px-6 py-4 text-sm">
                                 <div class="flex gap-2">
-                                    <a href="/users/<?= $u['id'] ?>/edit" class="text-yellow-600 hover:text-yellow-800" title="Edit">
+                                    <a href="<?= base_url() ?>users/<?= $u['id'] ?>/edit" class="text-yellow-600 hover:text-yellow-800" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <?php if ((int) $u['id'] !== (int) (session()->get('user')['id'] ?? 0)): ?>
-                                        <form action="/users/<?= $u['id'] ?>/delete" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus pengguna ini?')">
+                                        <form action="<?= base_url() ?>users/<?= $u['id'] ?>/delete" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus pengguna ini?')">
                                             <button type="submit" class="text-red-600 hover:text-red-800" title="Hapus">
                                                 <i class="fas fa-trash"></i>
                                             </button>

@@ -5,7 +5,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-semibold text-gray-800">Detail Notulensi Rapat</h3>
-            <a href="/notulensi" class="text-gray-600 hover:text-gray-800">
+            <a href="<?= base_url() ?>notulensi" class="text-gray-600 hover:text-gray-800">
                 <i class="fas fa-arrow-left mr-1"></i>Kembali
             </a>
         </div>
@@ -27,7 +27,7 @@
             <div class="bg-gray-50 rounded-lg p-4">
                 <p class="text-sm text-gray-500">Undangan Terkait</p>
                 <p class="font-medium"><?= esc($notulensi['nama_undangan']) ?></p>
-                <a href="/undangan/<?= $notulensi['undangan_id'] ?>/kelengkapan" class="inline-block mt-2 text-sm text-blue-600 hover:text-blue-800">
+                <a href="<?= base_url() ?>undangan/<?= $notulensi['undangan_id'] ?>/kelengkapan" class="inline-block mt-2 text-sm text-blue-600 hover:text-blue-800">
                     <i class="fas fa-folder-open mr-1"></i>Daftar hadir, berita acara &amp; dokumen
                 </a>
             </div>
@@ -58,7 +58,7 @@
                         <?php foreach ($fotos as $i => $foto): ?>
                             <div class="group relative aspect-square rounded-lg overflow-hidden shadow-sm cursor-pointer"
                                 onclick="openLightbox(<?= $i ?>)">
-                                <img src="/uploads/dokumentasi/<?= esc($foto) ?>"
+                                <img src="<?= base_url() ?>uploads/dokumentasi/<?= esc($foto) ?>"
                                     alt="Dokumentasi <?= $i + 1 ?>"
                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                 <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 flex items-center justify-center">
@@ -106,7 +106,7 @@
                 <?php endif; ?>
 
                 <?php if (has_role('kaprodi')): ?>
-                    <form action="/notulensi/<?= $notulensi['id'] ?>/verifikasi" method="POST" class="mt-4 space-y-3">
+                    <form action="<?= base_url() ?>notulensi/<?= $notulensi['id'] ?>/verifikasi" method="POST" class="mt-4 space-y-3">
                         <label class="block text-sm font-medium text-gray-700">Catatan / alasan penolakan</label>
                         <textarea name="catatan" rows="2" placeholder="Wajib diisi jika menolak"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#1e3a5f] outline-none"></textarea>
@@ -129,7 +129,7 @@
                 </div>
                 <?php if (has_role('admin', 'sekretaris')): ?>
                     <div class="flex gap-2">
-                        <a href="/notulensi/<?= $notulensi['id'] ?>/edit" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
+                        <a href="<?= base_url() ?>notulensi/<?= $notulensi['id'] ?>/edit" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
                             <i class="fas fa-edit mr-2"></i>Edit
                         </a>
                     </div>
@@ -141,7 +141,7 @@
 
 <?php if (!empty($fotos)): ?>
 <script>
-const fotos = <?= json_encode(array_map(fn($f) => '/uploads/dokumentasi/' . $f, $fotos)) ?>;
+const fotos = <?= json_encode(array_map(fn($f) => base_url('uploads/dokumentasi/' . $f), $fotos)) ?>;
 let currentIndex = 0;
 
 function openLightbox(index) {

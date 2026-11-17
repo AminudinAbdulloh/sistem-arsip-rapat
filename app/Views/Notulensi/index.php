@@ -6,7 +6,7 @@
     <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-800">Daftar Notulensi Rapat</h3>
         <?php if (has_role('admin', 'sekretaris')): ?>
-            <a href="/notulensi/create" class="bg-[#1e3a5f] text-white px-4 py-2 rounded-lg hover:bg-[#2d5f8f] transition-colors">
+            <a href="<?= base_url() ?>notulensi/create" class="bg-[#1e3a5f] text-white px-4 py-2 rounded-lg hover:bg-[#2d5f8f] transition-colors">
                 <i class="fas fa-plus mr-2"></i>Tambah Notulensi
             </a>
         <?php endif; ?>
@@ -14,9 +14,9 @@
 
     <!-- Filter Status -->
     <div class="flex flex-wrap gap-2 text-sm">
-        <a href="/notulensi" class="px-3 py-1.5 rounded-full border <?= empty($status) ? 'bg-[#1e3a5f] text-white border-[#1e3a5f]' : 'border-gray-300 text-gray-600 hover:bg-gray-50' ?>">Semua</a>
+        <a href="<?= base_url() ?>notulensi" class="px-3 py-1.5 rounded-full border <?= empty($status) ? 'bg-[#1e3a5f] text-white border-[#1e3a5f]' : 'border-gray-300 text-gray-600 hover:bg-gray-50' ?>">Semua</a>
         <?php foreach (\App\Models\NotulensiRapatModel::STATUS_LABELS as $value => $label): ?>
-            <a href="/notulensi?status=<?= $value ?>" class="px-3 py-1.5 rounded-full border <?= $status === $value ? 'bg-[#1e3a5f] text-white border-[#1e3a5f]' : 'border-gray-300 text-gray-600 hover:bg-gray-50' ?>"><?= esc($label) ?></a>
+            <a href="<?= base_url() ?>notulensi?status=<?= $value ?>" class="px-3 py-1.5 rounded-full border <?= $status === $value ? 'bg-[#1e3a5f] text-white border-[#1e3a5f]' : 'border-gray-300 text-gray-600 hover:bg-gray-50' ?>"><?= esc($label) ?></a>
         <?php endforeach; ?>
     </div>
 
@@ -51,14 +51,14 @@
                             <td class="px-6 py-4 text-sm text-gray-900"><?= esc($n['created_by_nama']) ?></td>
                             <td class="px-6 py-4 text-sm">
                                 <div class="flex gap-2">
-                                    <a href="/notulensi/<?= $n['id'] ?>/show" class="text-blue-600 hover:text-blue-800" title="Lihat Detail">
+                                    <a href="<?= base_url() ?>notulensi/<?= $n['id'] ?>/show" class="text-blue-600 hover:text-blue-800" title="Lihat Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     <?php if (has_role('admin', 'sekretaris')): ?>
-                                        <a href="/notulensi/<?= $n['id'] ?>/edit" class="text-yellow-600 hover:text-yellow-800" title="Edit">
+                                        <a href="<?= base_url() ?>notulensi/<?= $n['id'] ?>/edit" class="text-yellow-600 hover:text-yellow-800" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="/notulensi/<?= $n['id'] ?>/delete" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus notulensi ini?')">
+                                        <form action="<?= base_url() ?>notulensi/<?= $n['id'] ?>/delete" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus notulensi ini?')">
                                             <button type="submit" class="text-red-600 hover:text-red-800" title="Hapus">
                                                 <i class="fas fa-trash"></i>
                                             </button>

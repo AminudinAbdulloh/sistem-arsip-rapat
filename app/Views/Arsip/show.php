@@ -12,7 +12,7 @@ if (!empty($arsip['dokumentasi'])) {
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-semibold text-gray-800">Detail Arsip Rapat</h3>
-            <a href="/arsip" class="text-gray-600 hover:text-gray-800">
+            <a href="<?= base_url() ?>arsip" class="text-gray-600 hover:text-gray-800">
                 <i class="fas fa-arrow-left mr-1"></i>Kembali
             </a>
         </div>
@@ -45,8 +45,8 @@ if (!empty($arsip['dokumentasi'])) {
                     <p class="text-sm text-gray-500 mb-3"><i class="fas fa-camera mr-2"></i>Dokumentasi Foto</p>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         <?php foreach ($fotos as $i => $foto): ?>
-                            <a href="/uploads/dokumentasi/<?= esc($foto) ?>" target="_blank" rel="noopener" class="block aspect-square rounded-lg overflow-hidden shadow-sm">
-                                <img src="/uploads/dokumentasi/<?= esc($foto) ?>" alt="Dokumentasi <?= $i + 1 ?>" class="w-full h-full object-cover">
+                            <a href="<?= base_url() ?>uploads/dokumentasi/<?= esc($foto) ?>" target="_blank" rel="noopener" class="block aspect-square rounded-lg overflow-hidden shadow-sm">
+                                <img src="<?= base_url() ?>uploads/dokumentasi/<?= esc($foto) ?>" alt="Dokumentasi <?= $i + 1 ?>" class="w-full h-full object-cover">
                             </a>
                         <?php endforeach; ?>
                     </div>
@@ -102,7 +102,7 @@ if (!empty($arsip['dokumentasi'])) {
                     <ul class="space-y-2">
                         <?php foreach ($dokumen as $d): ?>
                             <li>
-                                <a href="/dokumen/<?= $d['id'] ?>/download" class="text-blue-600 hover:text-blue-800">
+                                <a href="<?= base_url() ?>dokumen/<?= $d['id'] ?>/download" class="text-blue-600 hover:text-blue-800">
                                     <i class="fas fa-download mr-2"></i><?= esc($d['judul']) ?>
                                 </a>
                                 <span class="text-xs text-gray-500">(<?= esc($d['nama_asli']) ?>, <?= number_format($d['ukuran'] / 1024, 0, ',', '.') ?> KB)</span>

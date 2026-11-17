@@ -34,26 +34,26 @@
             </div>
 
             <nav class="flex-1 py-4">
-                <a href="/dashboard" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('dashboard*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
+                <a href="<?= base_url() ?>dashboard" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('dashboard*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
                     <i class="fas fa-tachometer-alt w-5"></i>
                     <span>Dashboard</span>
                 </a>
                 <?php if (has_role('admin', 'sekretaris', 'kaprodi')): ?>
-                    <a href="/undangan" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('undangan*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
+                    <a href="<?= base_url() ?>undangan" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('undangan*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
                         <i class="fas fa-envelope w-5"></i>
                         <span>Undangan Rapat</span>
                     </a>
-                    <a href="/notulensi" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('notulensi*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
+                    <a href="<?= base_url() ?>notulensi" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('notulensi*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
                         <i class="fas fa-file-alt w-5"></i>
                         <span>Notulensi</span>
                     </a>
                 <?php endif; ?>
-                <a href="/arsip" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('arsip*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
+                <a href="<?= base_url() ?>arsip" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('arsip*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
                     <i class="fas fa-folder-open w-5"></i>
                     <span>Arsip Rapat</span>
                 </a>
                 <?php if (has_role('admin')): ?>
-                    <a href="/users" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('users*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
+                    <a href="<?= base_url() ?>users" class="nav-item flex items-center gap-3 px-6 py-3 <?= url_is('users*') ? 'bg-white/20 border-r-4 border-white' : '' ?>">
                         <i class="fas fa-users w-5"></i>
                         <span>Pengguna</span>
                     </a>
@@ -64,7 +64,7 @@
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
                         <?php if (!empty(session()->get('user')['foto_profil'])): ?>
-                            <img src="/uploads/profil/<?= session()->get('user')['foto_profil'] ?>" alt="Profile" class="w-full h-full object-cover">
+                            <img src="<?= base_url() ?>uploads/profil/<?= session()->get('user')['foto_profil'] ?>" alt="Profile" class="w-full h-full object-cover">
                         <?php else: ?>
                             <i class="fas fa-user text-sm"></i>
                         <?php endif; ?>
@@ -74,7 +74,7 @@
                         <p class="text-xs text-white/70 truncate"><?= esc(\App\Models\UserModel::ROLE_LABELS[session()->get('user')['role'] ?? ''] ?? '') ?></p>
                     </div>
                 </div>
-                <a href="/logout" class="mt-3 flex items-center gap-2 text-sm text-white/80 hover:text-white">
+                <a href="<?= base_url() ?>logout" class="mt-3 flex items-center gap-2 text-sm text-white/80 hover:text-white">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Keluar</span>
                 </a>

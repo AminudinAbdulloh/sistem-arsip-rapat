@@ -5,7 +5,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-6">Edit Undangan Rapat</h3>
 
-        <form action="/undangan/<?= $undangan['id'] ?>/update" method="POST" class="space-y-5">
+        <form action="<?= base_url() ?>undangan/<?= $undangan['id'] ?>/update" method="POST" class="space-y-5">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Hari <span class="text-red-500">*</span></label>
                 <select name="hari" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#1e3a5f] outline-none">
@@ -36,7 +36,7 @@
             </div>
 
             <div class="flex gap-3 pt-4">
-                <a href="/undangan" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <a href="<?= base_url() ?>undangan" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                     Batal
                 </a>
                 <button type="submit" class="px-4 py-2 bg-[#1e3a5f] text-white rounded-lg hover:bg-[#2d5f8f] transition-colors">
